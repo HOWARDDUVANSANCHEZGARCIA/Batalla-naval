@@ -10,6 +10,9 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+/**
+ * Controlador de la pantalla de inicio con animaciones y lógica de entrada.
+ */
 public class StartController {
 
     @FXML
@@ -23,9 +26,7 @@ public class StartController {
         Platform.runLater(() -> nicknameField.requestFocus());
 
         nicknameField.setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.ENTER) {
-                onNewGame();
-            }
+            if (event.getCode() == KeyCode.ENTER) onNewGame();
         });
 
         nicknameField.textProperty().addListener((obs, oldVal, newVal) -> {
@@ -48,17 +49,13 @@ public class StartController {
     @FXML
     protected void onNewGame() {
         String nickname = nicknameField.getText().trim();
-
         if (nickname.isEmpty()) {
             nicknameField.setStyle("-fx-border-color: #ff4444; -fx-effect: dropshadow(three-pass-box, red, 10, 0, 0, 0);");
             showAlert("¡Alto ahí, pirata!", "Falta tu nombre", "Debes registrarte en la bitácora antes de zarpar.");
         } else {
             System.out.println("Zarpando con el Capitán: " + nickname);
 
-            // Obtener el Stage actual
             Stage currentStage = (Stage) nicknameField.getScene().getWindow();
-
-            // Crear y mostrar la vista de colocación de barcos
             ShipPlacementController shipPlacement = new ShipPlacementController();
             shipPlacement.show(currentStage);
         }
@@ -69,17 +66,16 @@ public class StartController {
         String nickname = nicknameField.getText().trim();
 
         if (nickname.isEmpty()) {
-            // Feedback Visual: Borde Rojo neón en el campo de texto
+            // 1. Feedback Visual: Borde Rojo neón en el campo de texto
             nicknameField.setStyle("-fx-border-color: #ff4444; -fx-effect: dropshadow(three-pass-box, red, 10, 0, 0, 0);");
 
-            // Alerta Pirata de Bloqueo
+            // 2. Alerta Pirata de Bloqueo
             showAlert(
                     "¡Bitácora Cerrada!",
                     "Capitán Desconocido",
                     "No puedes recuperar tu nave si no sabemos quién eres.\nPor favor, firma con tu nombre antes de abrir la bitácora."
             );
         } else {
-            // Si hay nombre, procedemos
             System.out.println("Buscando bitácora antigua del Capitán: " + nickname);
             // TODO: Llamar al método de persistencia para cargar el objeto GameMatch
         }
