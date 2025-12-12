@@ -1,8 +1,9 @@
-module com.example.batallanaval {
+module com.com.battleship {
     requires javafx.controls;
     requires javafx.fxml;
 
+    opens com.battleship.main to javafx.fxml;
+    opens com.battleship.controller to javafx.fxml;
 
-    opens com.example.batallanaval to javafx.fxml;
-    exports com.example.batallanaval;
+    exports com.battleship.main;
 }
