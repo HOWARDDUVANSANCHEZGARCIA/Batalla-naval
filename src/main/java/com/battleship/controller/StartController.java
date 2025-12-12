@@ -7,6 +7,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 
 /**
@@ -18,14 +19,10 @@ public class StartController {
     private TextField nicknameField;
 
     @FXML
-    private VBox mainContainer; // Referencia al contenedor para animarlo
+    private VBox mainContainer;
 
-    /**
-     * Inicializa la vista, configura listeners y ejecuta la animación de entrada.
-     */
     @FXML
     public void initialize() {
-        // 1. Configuración del foco y eventos (Igual que antes)
         Platform.runLater(() -> nicknameField.requestFocus());
 
         nicknameField.setOnKeyPressed(event -> {
@@ -34,22 +31,15 @@ public class StartController {
 
         nicknameField.textProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal.isEmpty()) {
-                nicknameField.setStyle(null); // Limpia estilos inline al escribir
+                nicknameField.setStyle(null);
             }
         });
 
-        // 2. NUEVO: Animación de Fade-In (Aparición suave)
         animateEntrance();
     }
 
-    /**
-     * Ejecuta una transición de opacidad para que el menú aparezca suavemente.
-     */
     private void animateEntrance() {
-        // Hacemos el contenedor invisible al principio
         mainContainer.setOpacity(0);
-
-        // Creamos la animación de 1.5 segundos
         FadeTransition fadeOut = new FadeTransition(Duration.seconds(1.5), mainContainer);
         fadeOut.setFromValue(0.0);
         fadeOut.setToValue(1.0);
@@ -60,12 +50,14 @@ public class StartController {
     protected void onNewGame() {
         String nickname = nicknameField.getText().trim();
         if (nickname.isEmpty()) {
-            // Feedback visual rojo usando estilos CSS inline para el error
             nicknameField.setStyle("-fx-border-color: #ff4444; -fx-effect: dropshadow(three-pass-box, red, 10, 0, 0, 0);");
             showAlert("¡Alto ahí, pirata!", "Falta tu nombre", "Debes registrarte en la bitácora antes de zarpar.");
         } else {
             System.out.println("Zarpando con el Capitán: " + nickname);
-            // TODO: Cargar GameView
+
+            Stage currentStage = (Stage) nicknameField.getScene().getWindow();
+            ShipPlacementController shipPlacement = new ShipPlacementController();
+            shipPlacement.show(currentStage);
         }
     }
 
@@ -74,17 +66,13 @@ public class StartController {
         String nickname = nicknameField.getText().trim();
 
         if (nickname.isEmpty()) {
-            // 1. Feedback Visual: Borde Rojo neón en el campo de texto
             nicknameField.setStyle("-fx-border-color: #ff4444; -fx-effect: dropshadow(three-pass-box, red, 10, 0, 0, 0);");
-
-            // 2. Alerta Pirata de Bloqueo
             showAlert(
                     "¡Bitácora Cerrada!",
                     "Capitán Desconocido",
                     "No puedes recuperar tu nave si no sabemos quién eres.\nPor favor, firma con tu nombre antes de abrir la bitácora."
             );
         } else {
-            // Si hay nombre, procedemos
             System.out.println("Buscando bitácora antigua del Capitán: " + nickname);
             // TODO: Llamar al método de persistencia para cargar el objeto GameMatch
         }
@@ -96,25 +84,16 @@ public class StartController {
         alert.setHeaderText(header);
         alert.setContentText(content);
 
-        // --- SOLUCIÓN ROBUSTA ---
-
-        // 1. Obtenemos el DialogPane
         javafx.scene.control.DialogPane dialogPane = alert.getDialogPane();
-
-        // 2. Cargamos el CSS de forma segura
         String cssPath = "/com/battleship/view/styles.css";
         java.net.URL cssResource = getClass().getResource(cssPath);
 
         if (cssResource != null) {
             dialogPane.getStylesheets().add(cssResource.toExternalForm());
-            dialogPane.getStyleClass().add("my-dialog"); // Clase personalizada
+            dialogPane.getStyleClass().add("my-dialog");
         } else {
             System.err.println("ERROR CRÍTICO: No se encontró el archivo styles.css en la ruta: " + cssPath);
         }
-
-        // 3. Quitamos el ícono de la ventana (opcional, para estética limpia)
-        // Stage stage = (Stage) dialogPane.getScene().getWindow();
-        // stage.getIcons().add(new Image(...));
 
         alert.showAndWait();
     }
