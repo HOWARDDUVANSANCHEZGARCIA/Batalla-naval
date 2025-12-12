@@ -66,10 +66,7 @@ public class StartController {
         String nickname = nicknameField.getText().trim();
 
         if (nickname.isEmpty()) {
-            // 1. Feedback Visual: Borde Rojo neón en el campo de texto
             nicknameField.setStyle("-fx-border-color: #ff4444; -fx-effect: dropshadow(three-pass-box, red, 10, 0, 0, 0);");
-
-            // 2. Alerta Pirata de Bloqueo
             showAlert(
                     "¡Bitácora Cerrada!",
                     "Capitán Desconocido",
