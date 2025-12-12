@@ -71,7 +71,23 @@ public class StartController {
 
     @FXML
     protected void onLoadGame() {
-        System.out.println("Buscando en los archivos antiguos...");
+        String nickname = nicknameField.getText().trim();
+
+        if (nickname.isEmpty()) {
+            // 1. Feedback Visual: Borde Rojo neón en el campo de texto
+            nicknameField.setStyle("-fx-border-color: #ff4444; -fx-effect: dropshadow(three-pass-box, red, 10, 0, 0, 0);");
+
+            // 2. Alerta Pirata de Bloqueo
+            showAlert(
+                    "¡Bitácora Cerrada!",
+                    "Capitán Desconocido",
+                    "No puedes recuperar tu nave si no sabemos quién eres.\nPor favor, firma con tu nombre antes de abrir la bitácora."
+            );
+        } else {
+            // Si hay nombre, procedemos
+            System.out.println("Buscando bitácora antigua del Capitán: " + nickname);
+            // TODO: Llamar al método de persistencia para cargar el objeto GameMatch
+        }
     }
 
     private void showAlert(String title, String header, String content) {
