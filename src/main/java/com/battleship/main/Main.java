@@ -1,23 +1,25 @@
 package com.battleship.main;
 
+import com.battleship.view.StartView;
 import javafx.application.Application;
-import javafx.stage.Stage;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
+
 import java.io.IOException;
 
 public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws IOException {
-        // Código simple para probar que la ventana abre
-        Label label = new Label("¡Bienvenido a Batalla Naval!");
-        StackPane root = new StackPane(label);
-        Scene scene = new Scene(root, 400, 300);
+        // Usamos la clase StartView para cargar la interfaz
+        StartView startView = new StartView();
 
-        primaryStage.setTitle("Battleship Game");
+        // Configuramos la escena con el root que nos devuelve la vista
+        Scene scene = new Scene(startView.getInstance(), 1000, 900);
+
+        primaryStage.setTitle("Battleship - Inicio");
         primaryStage.setScene(scene);
+        primaryStage.setResizable(false); // Opcional: Bloquear redimensionamiento
         primaryStage.show();
     }
 
