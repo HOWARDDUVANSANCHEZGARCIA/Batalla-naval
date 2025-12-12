@@ -1,8 +1,8 @@
-package view;
+package com.battleship.view;
 
-import model.Ship;
-import model.ShipType;
-import view.shipDrawers.*;
+import com.battleship.model.Ship;
+import com.battleship.model.ShipType;
+import com.battleship.view.shipDrawers.*;
 import javafx.scene.Group;
 
 public class ShipView extends Group {

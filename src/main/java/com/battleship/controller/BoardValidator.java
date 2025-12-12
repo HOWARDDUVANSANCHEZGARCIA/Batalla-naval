@@ -1,8 +1,8 @@
-package com.example.controller;
+package com.battleship.controller;
 
-import model.Board;
-import model.Ship;
-import model.ShipType;
+import com.battleship.model.Board;
+import com.battleship.model.Ship;
+import com.battleship.model.ShipType;
 
 import java.util.HashMap;
 import java.util.Map;

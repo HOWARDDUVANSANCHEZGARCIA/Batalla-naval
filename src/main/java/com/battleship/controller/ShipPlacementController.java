@@ -1,12 +1,10 @@
-package com.example.controller;
+package com.battleship.controller;
 
-import com.battleship.controller.DraggableMakerGrid;
 import com.battleship.model.Board;
 import com.battleship.model.Ship;
 import com.battleship.model.ShipType;
 import com.battleship.view.GridHandler;
 import com.battleship.view.ShipView;
-import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
@@ -19,11 +17,9 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 /**
- * Aplicación principal - Batalla Naval
- * VERSIÓN RESPONSIVE: Se adapta al tamaño de la pantalla sin modo fullscreen
- * @author Tu nombre
+ * Controlador de la vista de colocación de barcos
  */
-public class Main extends Application {
+public class ShipPlacementController {
 
     private Pane boardPane;
     private VBox shipsPanel;
@@ -31,11 +27,10 @@ public class Main extends Application {
     private Label instructionLabel;
     private Board board;
 
-    private static final double BOARD_SIZE_PX = 500;  // 500x500 píxeles
-    private static final double SHIP_INITIAL_X = 550; // Posición X inicial de barcos
+    private static final double BOARD_SIZE_PX = 500;
+    private static final double SHIP_INITIAL_X = 550;
 
-    @Override
-    public void start(Stage primaryStage) {
+    public void show(Stage stage) {
         // Crear panel principal
         BorderPane root = new BorderPane();
         root.setPadding(new Insets(30));
@@ -45,7 +40,7 @@ public class Main extends Application {
         VBox topPanel = createTopPanel();
         root.setTop(topPanel);
 
-        // Panel central con el tablero (más grande)
+        // Panel central con el tablero
         boardPane = new Pane();
         boardPane.setPrefSize(BOARD_SIZE_PX, BOARD_SIZE_PX);
         boardPane.setMaxSize(BOARD_SIZE_PX, BOARD_SIZE_PX);
@@ -65,44 +60,32 @@ public class Main extends Application {
         shipsPanel = createShipsPanel();
         root.setRight(shipsPanel);
 
-        // Panel inferior con botones CENTRADOS
+        // Panel inferior con botones
         VBox bottomPanel = createBottomPanel();
         root.setBottom(bottomPanel);
 
-        // ← INICIALIZAR BOARD
+        // Inicializar board
         board = new Board();
-
-        // Inicializar sistema de drag & drop CON EL BOARD
         draggableMaker = new DraggableMakerGrid(board);
 
-        // Crear los barcos arrastrables (APILADOS)
+        // Crear los barcos arrastrables
         createDraggableShips();
 
-        // Obtener dimensiones de la pantalla (sin contar barra de tareas)
+        // Obtener dimensiones de la pantalla
         Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
 
-        // Configurar la escena con tamaño de la pantalla
+        // Configurar la escena
         Scene scene = new Scene(root, screenBounds.getWidth(), screenBounds.getHeight());
 
-        primaryStage.setTitle("Batalla Naval - Colocación de Barcos");
-        primaryStage.setScene(scene);
-
-        // Maximizar la ventana (pero NO fullscreen)
-        primaryStage.setMaximized(true);
-
-        // Permitir redimensionar si el usuario quiere
-        primaryStage.setResizable(true);
-
-        // Posicionar en 0,0 para que ocupe desde arriba
-        primaryStage.setX(screenBounds.getMinX());
-        primaryStage.setY(screenBounds.getMinY());
-
-        primaryStage.show();
+        stage.setTitle("Batalla Naval - Colocación de Barcos");
+        stage.setScene(scene);
+        stage.setMaximized(true);
+        stage.setResizable(true);
+        stage.setX(screenBounds.getMinX());
+        stage.setY(screenBounds.getMinY());
+        stage.show();
     }
 
-    /**
-     * Crea el panel superior con título e instrucciones
-     */
     private VBox createTopPanel() {
         VBox panel = new VBox(15);
         panel.setAlignment(Pos.CENTER);
@@ -118,9 +101,6 @@ public class Main extends Application {
         return panel;
     }
 
-    /**
-     * Crea el panel lateral con información de los barcos
-     */
     private VBox createShipsPanel() {
         VBox panel = new VBox(25);
         panel.setPadding(new Insets(30));
@@ -131,7 +111,6 @@ public class Main extends Application {
         Label title = new Label("FLOTA DISPONIBLE");
         title.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #ecf0f1;");
 
-        // Información de los barcos
         VBox info = new VBox(12);
         info.getChildren().addAll(
                 createShipInfoLabel("1x Portaaviones (4 casillas)", Color.DARKBLUE),
@@ -140,7 +119,6 @@ public class Main extends Application {
                 createShipInfoLabel("4x Fragatas (1 casilla)", Color.GRAY)
         );
 
-        // Nota adicional
         Label note = new Label("💡 Los barcos del mismo tipo\nestán apilados");
         note.setStyle("-fx-font-size: 14px; -fx-text-fill: #95a5a6; -fx-text-alignment: center;");
         note.setWrapText(true);
@@ -149,19 +127,12 @@ public class Main extends Application {
         return panel;
     }
 
-    /**
-     * Crea un label de información de barco
-     */
     private Label createShipInfoLabel(String text, Color color) {
         Label label = new Label("• " + text);
         label.setStyle("-fx-font-size: 16px; -fx-text-fill: #ecf0f1;");
-        label.setTextFill(Color.web("#ecf0f1"));
         return label;
     }
 
-    /**
-     * Crea el panel inferior con botones CENTRADOS
-     */
     private VBox createBottomPanel() {
         VBox panel = new VBox(15);
         panel.setAlignment(Pos.CENTER);
@@ -184,68 +155,49 @@ public class Main extends Application {
         return panel;
     }
 
-    /**
-     * Crea todos los barcos arrastrables (APILADOS POR TIPO)
-     */
     private void createDraggableShips() {
         double startX = SHIP_INITIAL_X;
         double startY = 100;
         double spacing = 90;
 
-        // 1 Portaaviones (solo 1, no necesita apilado)
         createDraggableShip(ShipType.PORTAAVIONES, true, startX, startY);
         startY += spacing;
 
-        // 2 Submarinos APILADOS en la misma posición
         for (int i = 0; i < 2; i++) {
             createDraggableShip(ShipType.SUBMARINO, true, startX, startY);
         }
         startY += spacing;
 
-        // 3 Destructores APILADOS en la misma posición
         for (int i = 0; i < 3; i++) {
             createDraggableShip(ShipType.DESTRUCTOR, true, startX, startY);
         }
         startY += spacing;
 
-        // 4 Fragatas APILADAS en la misma posición
         for (int i = 0; i < 4; i++) {
             createDraggableShip(ShipType.FRAGATA, true, startX, startY);
         }
     }
 
-    /**
-     * Crea un barco arrastrable individual
-     */
     private void createDraggableShip(ShipType type, boolean horizontal, double x, double y) {
         Ship ship = new Ship(type, horizontal);
         ShipView shipView = new ShipView(ship);
 
-        // Posicionar el barco usando LayoutX/Y
         shipView.setLayoutX(x);
         shipView.setLayoutY(y);
 
-        // Hacer que se pueda arrastrar
         draggableMaker.makeDraggable(shipView);
 
-        // Click derecho para rotar
         shipView.setOnMouseClicked(event -> {
             if (event.getButton() == javafx.scene.input.MouseButton.SECONDARY) {
                 Ship rotatingShip = shipView.getShip();
-
-                // Obtener posición actual
                 double currentX = shipView.getLayoutX();
                 double currentY = shipView.getLayoutY();
                 int gridCol = (int)(currentX / 50);
                 int gridRow = (int)(currentY / 50);
 
-                // Cambiar orientación en el MODELO primero
                 rotatingShip.setHorizontal(!rotatingShip.isHorizontal());
-
-                // Actualizar orientación visual
                 shipView.updateOrientation();
 
-                // Validar que el barco rotado quepa en el tablero
                 boolean fitsAfterRotation = true;
                 if (currentX < BOARD_SIZE_PX && currentY < BOARD_SIZE_PX) {
                     if (rotatingShip.isHorizontal()) {
@@ -259,7 +211,6 @@ public class Main extends Application {
                     }
                 }
 
-                // Si no cabe, deshacer la rotación
                 if (!fitsAfterRotation && currentX < BOARD_SIZE_PX) {
                     rotatingShip.setHorizontal(!rotatingShip.isHorizontal());
                     shipView.updateOrientation();
@@ -267,39 +218,21 @@ public class Main extends Application {
             }
         });
 
-        // Agregar al panel del tablero
         boardPane.getChildren().add(shipView);
     }
 
-
-
-
     private void resetBoard() {
-        // Limpiar todos los barcos
         boardPane.getChildren().removeIf(node -> node instanceof ShipView);
-
-        // Reiniciar el board
         board = new Board();
         draggableMaker = new DraggableMakerGrid(board);
-
-        // Volver a crear los barcos
         createDraggableShips();
 
         instructionLabel.setText("Tablero reiniciado | Arrastra los barcos al tablero");
         instructionLabel.setStyle("-fx-font-size: 18px; -fx-text-fill: #bdc3c7;");
     }
 
-
-    /**
-     * Intenta iniciar el juego
-     */
     private void startGame() {
-        // TODO: Validar que todos los barcos estén colocados correctamente
         instructionLabel.setText("¡Juego iniciado! (Esta funcionalidad se implementará después)");
         instructionLabel.setStyle("-fx-font-size: 18px; -fx-text-fill: #2ecc71; -fx-font-weight: bold;");
-    }
-
-    public static void main(String[] args) {
-        launch(args);
     }
 }

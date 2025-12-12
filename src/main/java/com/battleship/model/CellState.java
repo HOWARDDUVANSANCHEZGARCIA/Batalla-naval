@@ -1,4 +1,4 @@
-package model;
+package com.battleship.model;
 
 public enum CellState {
     EMPTY("Vacío"),         // Celda sin disparar

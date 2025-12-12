@@ -1,4 +1,4 @@
-package model;
+package com.battleship.model;
 
 import javafx.scene.paint.Color;
 import java.util.ArrayList;

@@ -1,9 +1,9 @@
-package com.example.controller;
+package com.battleship.controller;
 
-import model.Board;
-import model.Ship;
-import view.GridConfig;
-import view.ShipView;
+import com.battleship.model.Board;
+import com.battleship.model.Ship;
+import com.battleship.view.GridConfig;
+import com.battleship.view.ShipView;
 import javafx.geometry.Bounds;
 import javafx.scene.Node;
 

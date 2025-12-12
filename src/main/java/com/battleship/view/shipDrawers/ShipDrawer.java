@@ -1,4 +1,4 @@
-package view.shipDrawers;
+package com.battleship.view.shipDrawers;
 
 import javafx.scene.Group;
 

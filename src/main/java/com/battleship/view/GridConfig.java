@@ -1,4 +1,4 @@
-package view;
+package com.battleship.view;
 
 
 public class GridConfig {
