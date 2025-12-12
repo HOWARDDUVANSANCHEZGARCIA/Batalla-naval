@@ -1,4 +1,4 @@
-package com.example.batallanaval;
+package com.example.controller;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
