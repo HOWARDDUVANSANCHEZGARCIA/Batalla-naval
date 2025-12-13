@@ -9,6 +9,11 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import com.battleship.persistence.GamePersistenceManager;
+import com.battleship.persistence.GameState;
+import com.battleship.persistence.PlayerData;
+import com.battleship.exceptions.LoadGameException;
+import com.battleship.exceptions.InvalidGameStateException;
 
 /**
  * Controlador de la pantalla de inicio con animaciones y lógica de entrada.
@@ -49,12 +54,12 @@ public class StartController {
     @FXML
     protected void onNewGame() {
         String nickname = nicknameField.getText().trim();
+
         if (nickname.isEmpty()) {
             nicknameField.setStyle("-fx-border-color: #ff4444; -fx-effect: dropshadow(three-pass-box, red, 10, 0, 0, 0);");
             showAlert("¡Alto ahí, pirata!", "Falta tu nombre", "Debes registrarte en la bitácora antes de zarpar.");
         } else {
             System.out.println("Zarpando con el Capitán: " + nickname);
-
             Stage currentStage = (Stage) nicknameField.getScene().getWindow();
             ShipPlacementController shipPlacement = new ShipPlacementController();
             shipPlacement.show(currentStage);
@@ -72,9 +77,70 @@ public class StartController {
                     "Capitán Desconocido",
                     "No puedes recuperar tu nave si no sabemos quién eres.\nPor favor, firma con tu nombre antes de abrir la bitácora."
             );
-        } else {
-            System.out.println("Buscando bitácora antigua del Capitán: " + nickname);
-            // TODO: Llamar al método de persistencia para cargar el objeto GameMatch
+            return;
+        }
+
+        System.out.println("Buscando bitácora antigua del Capitán: " + nickname);
+
+        GamePersistenceManager manager = GamePersistenceManager.getInstance();
+
+        if (!manager.hasSavedGame()) {
+            showAlert(
+                    "¡Bitácora Vacía!",
+                    "Sin Partidas Guardadas",
+                    "No se encontró ninguna partida guardada, Capitán " + nickname + ".\n¿Por qué no empiezas una nueva aventura?"
+            );
+            return;
+        }
+
+        try {
+            GameState gameState = manager.loadGameState();
+            PlayerData playerData = manager.loadPlayerData();
+
+            playerData.setNickname(nickname);
+
+            showInfoAlert(
+                    "¡Bitácora Encontrada!",
+                    "Partida Recuperada",
+                    "Bienvenido de vuelta, Capitán " + nickname + "!\n\n" +
+                            "Última partida: " + gameState.getLastSaved() + "\n" +
+                            "Turno: " + (gameState.isPlayerTurn() ? "Tu turno" : "Turno del enemigo")
+            );
+
+            Stage currentStage = (Stage) nicknameField.getScene().getWindow();
+
+// TODO: Tu amigo debe implementar GameController.loadGame()
+// GameController gameController = new GameController();
+// gameController.loadGame(currentStage, gameState, playerData);
+
+            System.out.println("Partida cargada exitosamente para: " + nickname);
+
+        } catch (LoadGameException e) {
+            System.err.println("Error al cargar la partida: " + e.getMessage());
+            e.printStackTrace();
+
+            showAlert(
+                    "¡Error Fatal!",
+                    "Bitácora Dañada",
+                    "La bitácora está corrupta o ilegible, Capitán.\n\n" +
+                            "Error: " + e.getErrorType() + "\n" +
+                            "Detalles: " + e.getMessage() + "\n\n" +
+                            "Tendrás que empezar una nueva aventura."
+            );
+
+            manager.deleteSavedGame();
+
+        } catch (InvalidGameStateException e) {
+            System.err.println("Estado del juego inválido: " + e.getMessage());
+
+            showAlert(
+                    "¡Estado Inválido!",
+                    "Partida Corrupta",
+                    "El estado del juego guardado no es válido.\n\n" +
+                            "Detalles: " + e.getMessage()
+            );
+
+            manager.deleteSavedGame();
         }
     }
 
@@ -93,6 +159,24 @@ public class StartController {
             dialogPane.getStyleClass().add("my-dialog");
         } else {
             System.err.println("ERROR CRÍTICO: No se encontró el archivo styles.css en la ruta: " + cssPath);
+        }
+
+        alert.showAndWait();
+    }
+
+    private void showInfoAlert(String title, String header, String content) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(header);
+        alert.setContentText(content);
+
+        javafx.scene.control.DialogPane dialogPane = alert.getDialogPane();
+        String cssPath = "/com/battleship/view/styles.css";
+        java.net.URL cssResource = getClass().getResource(cssPath);
+
+        if (cssResource != null) {
+            dialogPane.getStylesheets().add(cssResource.toExternalForm());
+            dialogPane.getStyleClass().add("my-dialog");
         }
 
         alert.showAndWait();
