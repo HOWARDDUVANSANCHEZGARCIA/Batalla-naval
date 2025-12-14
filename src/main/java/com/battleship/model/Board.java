@@ -3,6 +3,7 @@ package com.battleship.model;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 
 public class Board implements Serializable {
@@ -152,6 +153,46 @@ public class Board implements Serializable {
             }
         }
         return true;
+    }
+
+    public boolean allShipsPlaced() {
+        int totalShips = 0;
+
+        for (ShipType type : ShipType.values()) {
+            int count = 0;
+
+            for (Ship ship : ships) {
+                if (ship.getType() == type) {
+                    count++;
+                }
+            }
+
+            if (count != type.getQuantity()) {
+                return false;
+            }
+
+            totalShips += count;
+        }
+
+        return totalShips == ShipType.getTotalShips();
+    }
+
+    public void placeShipsRandom() {
+        for (ShipType type : ShipType.values()) {
+            for (int i = 0; i < type.getQuantity(); i++) {
+
+                boolean placed = false;
+
+                while (!placed) {
+                    int row = (int) (Math.random() * SIZE);
+                    int col = (int) (Math.random() * SIZE);
+                    boolean horizontal = Math.random() < 0.5;
+
+                    Ship ship = new Ship(type, horizontal);
+                    placed = placeShip(ship, row, col);
+                }
+            }
+        }
     }
 
 
