@@ -232,7 +232,22 @@ public class ShipPlacementController {
     }
 
     private void startGame() {
-        instructionLabel.setText("¡Juego iniciado! (Esta funcionalidad se implementará después)");
-        instructionLabel.setStyle("-fx-font-size: 18px; -fx-text-fill: #2ecc71; -fx-font-weight: bold;");
-    }
+        //Validar que todos los barcos esten colocados
+        if (!board.allShipsPlaced()){
+            instructionLabel.setText("❌ Debes colocar todos los barcos antes de inicar.");
+            instructionLabel.setStyle("-fx-font-size: 18px; -fx-text-fill: #e74c3c;");
+            return;
+        }
+
+        //Crear tablero de la IA
+        Board iaBoard = new Board();
+        iaBoard.placeShipsRandom();
+
+        //Pasar a la vista del juego
+        Stage currentStage = (Stage) boardPane.getScene().getWindow();
+        currentStage.close();
+        GameController gameController = new GameController();
+        gameController.startGame(board, iaBoard);
+
+        }
 }
