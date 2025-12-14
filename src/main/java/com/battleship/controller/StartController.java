@@ -109,9 +109,9 @@ public class StartController {
 
             Stage currentStage = (Stage) nicknameField.getScene().getWindow();
 
-// TODO: Tu amigo debe implementar GameController.loadGame()
-// GameController gameController = new GameController();
-// gameController.loadGame(currentStage, gameState, playerData);
+            GameController gameController = new GameController();
+            gameController.loadGame(currentStage, gameState, playerData);
+
 
             System.out.println("Partida cargada exitosamente para: " + nickname);
 

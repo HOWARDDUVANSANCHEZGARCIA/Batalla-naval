@@ -3,8 +3,10 @@ package com.battleship.model;
 import javafx.scene.paint.Color;
 import java.util.ArrayList;
 import java.util.List;
+import java.io.Serializable;
 
-public class Ship {
+public class Ship implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     private ShipType type;
     private int size;
@@ -12,7 +14,6 @@ public class Ship {
     private int col;
     private boolean horizontal;
     private int hits;
-    private Color color;
 
     // Posiciones que ocupa el barco en el tablero
     private List<Position> positions = new ArrayList<>();
@@ -22,7 +23,7 @@ public class Ship {
         this.type = type;
         this.size = type.getSize();
         // Si no manejas color por tipo, puedes dejar un color fijo o ignorarlo
-        this.color = Color.GRAY;
+
         this.horizontal = horizontal;
         this.hits = 0;
         this.row = -1;  // posición inválida hasta colocarlo
@@ -32,7 +33,7 @@ public class Ship {
     // Constructor alternativo con tamaño y color directos (por si lo usas en otro lado)
     public Ship(int size, Color color) {
         this.size = size;
-        this.color = color;
+
         this.hits = 0;
         this.horizontal = true;
         this.row = -1;
@@ -61,7 +62,7 @@ public class Ship {
 
     public boolean isSunk() { return hits >= size; }
 
-    public Color getColor() { return color; }
+
 
     public void setPosition(int row, int col) {
         this.row = row;

@@ -190,30 +190,49 @@ public class ShipPlacementController {
         shipView.setOnMouseClicked(event -> {
             if (event.getButton() == javafx.scene.input.MouseButton.SECONDARY) {
                 Ship rotatingShip = shipView.getShip();
+
+                // Coordenadas actuales en píxeles
                 double currentX = shipView.getLayoutX();
                 double currentY = shipView.getLayoutY();
-                int gridCol = (int)(currentX / 50);
-                int gridRow = (int)(currentY / 50);
 
-                rotatingShip.setHorizontal(!rotatingShip.isHorizontal());
-                shipView.updateOrientation();
-
-                boolean fitsAfterRotation = true;
-                if (currentX < BOARD_SIZE_PX && currentY < BOARD_SIZE_PX) {
-                    if (rotatingShip.isHorizontal()) {
-                        if (gridCol + rotatingShip.getSize() > 10) {
-                            fitsAfterRotation = false;
-                        }
-                    } else {
-                        if (gridRow + rotatingShip.getSize() > 10) {
-                            fitsAfterRotation = false;
-                        }
-                    }
-                }
-
-                if (!fitsAfterRotation && currentX < BOARD_SIZE_PX) {
+                // Si está fuera del tablero (en el panel derecho), solo rota la vista y el flag
+                if (currentX >= BOARD_SIZE_PX || currentY >= BOARD_SIZE_PX) {
                     rotatingShip.setHorizontal(!rotatingShip.isHorizontal());
                     shipView.updateOrientation();
+                    return;
+                }
+
+                // Está en el tablero → hay que sincronizar con Board
+                int gridCol = (int) (currentX / 50); // mejor usar GridConfig.CELL_SIZE
+                int gridRow = (int) (currentY / 50);
+
+                boolean wasPlaced = rotatingShip.getPositions() != null && !rotatingShip.getPositions().isEmpty();
+
+                // 1) Si estaba colocado, quitarlo del Board
+                if (wasPlaced) {
+                    board.removeShip(rotatingShip);
+                }
+
+                // 2) Guardar orientación anterior y cambiar a la nueva
+                boolean oldHorizontal = rotatingShip.isHorizontal();
+                rotatingShip.setHorizontal(!oldHorizontal);
+                shipView.updateOrientation();
+
+                // 3) Comprobar si con la nueva orientación cabe y no se solapa
+                boolean canStay = board.canPlaceShip(rotatingShip, gridRow, gridCol);
+
+                if (canStay) {
+                    // 4) Recolocarlo en el Board con la nueva orientación
+                    board.placeShip(rotatingShip, gridRow, gridCol);
+                } else {
+                    // 5) No cabe / hay superposición → revertir orientación
+                    rotatingShip.setHorizontal(oldHorizontal);
+                    shipView.updateOrientation();
+
+                    // Volver a colocarlo en el Board como estaba antes
+                    if (wasPlaced) {
+                        board.placeShip(rotatingShip, gridRow, gridCol);
+                    }
                 }
             }
         });
@@ -232,22 +251,54 @@ public class ShipPlacementController {
     }
 
     private void startGame() {
-        //Validar que todos los barcos esten colocados
-        if (!board.allShipsPlaced()){
-            instructionLabel.setText("❌ Debes colocar todos los barcos antes de inicar.");
-            instructionLabel.setStyle("-fx-font-size: 18px; -fx-text-fill: #e74c3c;");
+        // Validar que todos los barcos estén colocados
+        if (board.getShips().size() < 10) { // 10 barcos en total
+            instructionLabel.setText("⚠️ Debes colocar todos los barcos antes de iniciar");
+            instructionLabel.setStyle("-fx-font-size: 18px; -fx-text-fill: #e74c3c; -fx-font-weight: bold;");
             return;
         }
 
-        //Crear tablero de la IA
-        Board iaBoard = new Board();
-        iaBoard.placeShipsRandom();
+        instructionLabel.setText("⚓ Iniciando batalla...");
+        instructionLabel.setStyle("-fx-font-size: 18px; -fx-text-fill: #2ecc71; -fx-font-weight: bold;");
 
-        //Pasar a la vista del juego
-        Stage currentStage = (Stage) boardPane.getScene().getWindow();
-        currentStage.close();
+        // Crear tablero de la IA con barcos aleatorios
+        Board iaBoard = new Board();
+        placeIAShips(iaBoard);
+
+        // Iniciar el juego
+        Stage stage = (Stage) boardPane.getScene().getWindow();
         GameController gameController = new GameController();
         gameController.startGame(board, iaBoard);
+    }
 
+    /**
+     * Coloca los barcos de la IA de forma aleatoria
+     */
+    private void placeIAShips(Board iaBoard) {
+        ShipType[] shipTypes = {
+                ShipType.PORTAAVIONES,
+                ShipType.SUBMARINO, ShipType.SUBMARINO,
+                ShipType.DESTRUCTOR, ShipType.DESTRUCTOR, ShipType.DESTRUCTOR,
+                ShipType.FRAGATA, ShipType.FRAGATA, ShipType.FRAGATA, ShipType.FRAGATA
+        };
+
+        for (ShipType type : shipTypes) {
+            boolean placed = false;
+            int attempts = 0;
+
+            while (!placed && attempts < 100) {
+                int row = (int) (Math.random() * 10);
+                int col = (int) (Math.random() * 10);
+                boolean horizontal = Math.random() > 0.5;
+
+                Ship ship = new Ship(type, horizontal);
+
+                if (iaBoard.canPlaceShip(ship, row, col)) {
+                    iaBoard.placeShip(ship, row, col);
+                    placed = true;
+                }
+                attempts++;
+            }
         }
+    }
 }
