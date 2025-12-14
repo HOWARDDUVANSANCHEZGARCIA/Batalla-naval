@@ -10,73 +10,97 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.stage.Stage;
-import javafx.geometry.Insets;
+import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.control.Label;
+import javafx.stage.Stage;
+import javafx.geometry.Insets;
 import javafx.scene.layout.VBox;
 
 /**
- * Controlador del juego con sistema de guardado automático integrado
+ * Main Game Controller for Battleship.
+ * <p>
+ * Manages visual game logic, user-AI interaction, real-time board updates,
+ * and the auto-save system. Implements a GUI based on StackPanes to layer emojis over cells.
+ * </p>
+ *
+ * @version 1.0.0
+ * @author Martin
  */
 public class GameController {
 
+    // --- Game Logic ---
     private boolean gameOver = false;
     private Board playerBoard;
     private Board iaBoard;
-    private Rectangle[][] playerCells;
-    private Rectangle[][] iaCells;
-    private Label turnLabel;
     private boolean playerTurn = true;
-    private static final int CELL_SIZE = 40;
-    private GridPane iaGrid;
-    private GridPane playerGrid;
-    private boolean iaHunting = false;
+    private boolean iaHunting = false; // AI state for "Hunt" mode
     private int lastHitRow = -1;
     private int lastHitCol = -1;
 
-    // Sistema de persistencia
+    // --- UI Elements ---
+    private static final int CELL_SIZE = 40;
+    private GridPane iaGrid;
+    private GridPane playerGrid;
+    private Label turnLabel;
+
+    // Visual matrices to update state without redrawing everything
+    private Rectangle[][] playerCells;
+    private Rectangle[][] iaCells;
+    private Label[][] playerLabels;
+    private Label[][] iaLabels;
+
+    // --- Data Persistence ---
     private GameState gameState;
     private PlayerData playerData;
     private GamePersistenceManager persistenceManager;
 
     /**
-     * Inicia un juego NUEVO con tableros ya configurados
+     * Starts a new game by setting up boards and the graphical interface.
+     *
+     * @param playerBoard Player board with ships already positioned.
+     * @param iaBoard AI board generated randomly.
      */
     public void startGame(Board playerBoard, Board iaBoard) {
         this.playerBoard = playerBoard;
         this.iaBoard = iaBoard;
 
-// Inicializar sistema de persistencia
+        // Initialize persistence system
         persistenceManager = GamePersistenceManager.getInstance();
         gameState = new GameState(playerBoard, iaBoard);
-        playerData = new PlayerData("Player"); // El nickname se actualizará desde StartController
+        playerData = new PlayerData("Player");
 
         Stage stage = new Stage();
-        stage.setTitle("Batalla Naval - Juego");
+        stage.setTitle("Battleship - In Combat");
 
+        // Main layout configuration with themed background
         VBox root = new VBox(30);
         root.setPadding(new Insets(30));
         root.setAlignment(Pos.TOP_CENTER);
-        root.setStyle("-fx-background-color: #2c3e50;");
+        root.getStyleClass().add("battle-background");
 
+        // Top panel with Title and Turn label
         VBox topPanel = new VBox(15);
         topPanel.setAlignment(Pos.CENTER);
 
-        Label title = new Label("🚢 BATALLA NAVAL 🚢");
-        title.setStyle("-fx-font-size: 36px; -fx-font-weight: bold; -fx-text-fill: #ecf0f1;");
+        Label title = new Label(" BATTLESHIP ");
+        title.getStyleClass().add("title-label");
 
-        turnLabel = new Label("🎯 Tu turno");
-        turnLabel.setStyle("-fx-font-size: 20px; -fx-text-fill: #2ecc71;");
+        turnLabel = new Label(playerTurn ? "AYE AYE, CAPTAIN" : "ENEMY IS FIRING...");
+        turnLabel.setStyle("-fx-font-family: 'Cinzel'; -fx-font-size: 24px; -fx-text-fill: " +
+                (playerTurn ? "#2ecc71" : "#e67e22") +
+                "; -fx-effect: dropshadow(one-pass-box, black, 3, 0, 0, 1);");
 
         topPanel.getChildren().addAll(title, turnLabel);
 
+        // Initialize visual matrices
         playerCells = new Rectangle[10][10];
         iaCells = new Rectangle[10][10];
+        playerLabels = new Label[10][10];
+        iaLabels = new Label[10][10];
+
+        // Create visual grids
         playerGrid = createBoardGrid(playerBoard, true);
         iaGrid = createBoardGrid(iaBoard, false);
 
@@ -85,17 +109,27 @@ public class GameController {
 
         root.getChildren().addAll(topPanel, boardsBox);
 
+        // Scene configuration and CSS loading
         Scene scene = new Scene(root);
+        try {
+            scene.getStylesheets().add(getClass().getResource("/com/battleship/view/styles.css").toExternalForm());
+        } catch (Exception e) {
+            System.err.println("Error: Could not load CSS style file.");
+        }
         stage.setScene(scene);
         stage.setMaximized(true);
         stage.show();
 
-// Guardado inicial
+        // Initial auto-save
         autoSaveGame();
     }
 
     /**
-     * Carga un juego guardado previamente
+     * Loads a previously saved game and restores the game state.
+     *
+     * @param stage Main stage where the game will be rendered.
+     * @param loadedGameState Game state retrieved from the serialized file.
+     * @param loadedPlayerData Player data retrieved.
      */
     public void loadGame(Stage stage, GameState loadedGameState, PlayerData loadedPlayerData) {
         this.gameState = loadedGameState;
@@ -107,26 +141,31 @@ public class GameController {
 
         persistenceManager = GamePersistenceManager.getInstance();
 
-        stage.setTitle("Batalla Naval - Juego (Cargado)");
+        stage.setTitle("Battleship - Game (Loaded)");
 
         VBox root = new VBox(30);
         root.setPadding(new Insets(30));
         root.setAlignment(Pos.TOP_CENTER);
-        root.setStyle("-fx-background-color: #2c3e50;");
+        root.getStyleClass().add("battle-background");
 
         VBox topPanel = new VBox(15);
         topPanel.setAlignment(Pos.CENTER);
 
-        Label title = new Label("🚢 BATALLA NAVAL 🚢");
-        title.setStyle("-fx-font-size: 36px; -fx-font-weight: bold; -fx-text-fill: #ecf0f1;");
+        Label title = new Label("BATTLESHIP ");
+        title.getStyleClass().add("title-label");
 
-        turnLabel = new Label(playerTurn ? "🎯 Tu turno" : "🤖 Turno de la IA");
-        turnLabel.setStyle("-fx-font-size: 20px; -fx-text-fill: " + (playerTurn ? "#2ecc71" : "#e67e22") + ";");
+        turnLabel = new Label(playerTurn ? "AYE AYE, CAPTAIN" : "ENEMY IS FIRING...");
+        turnLabel.setStyle("-fx-font-family: 'Cinzel'; -fx-font-size: 24px; -fx-text-fill: " +
+                (playerTurn ? "#2ecc71" : "#e67e22") +
+                "; -fx-effect: dropshadow(one-pass-box, black, 3, 0, 0, 1);");
 
         topPanel.getChildren().addAll(title, turnLabel);
 
         playerCells = new Rectangle[10][10];
         iaCells = new Rectangle[10][10];
+        playerLabels = new Label[10][10];
+        iaLabels = new Label[10][10];
+
         playerGrid = createBoardGrid(playerBoard, true);
         iaGrid = createBoardGrid(iaBoard, false);
 
@@ -136,112 +175,216 @@ public class GameController {
         root.getChildren().addAll(topPanel, boardsBox);
 
         Scene scene = new Scene(root);
+        try {
+            scene.getStylesheets().add(getClass().getResource("/com/battleship/view/styles.css").toExternalForm());
+        } catch (Exception e) {
+            System.err.println("Error: Could not load CSS style file.");
+        }
         stage.setScene(scene);
         stage.setMaximized(true);
         stage.show();
 
-// Si es turno de la IA, ejecutarla
+        // If loaded during AI turn, resume AI logic
         if (!playerTurn && !gameOver) {
             iaTurn();
         }
     }
 
+    /**
+     * Generates the visual board grid using StackPanes.
+     * Each cell contains a Rectangle (background) and a Label (emoji).
+     *
+     * @param board The logical board model.
+     * @param showShips Indicates if ships should be shown (True for player, False for AI).
+     * @return Configured GridPane with cells.
+     */
     private GridPane createBoardGrid(Board board, boolean showShips) {
         GridPane grid = new GridPane();
         grid.setAlignment(Pos.CENTER);
-        grid.setHgap(2);
-        grid.setVgap(2);
+        grid.getStyleClass().add("game-grid");
 
         Rectangle[][] cells = showShips ? playerCells : iaCells;
+        Label[][] labels = showShips ? playerLabels : iaLabels;
 
         for (int row = 0; row < board.getSize(); row++) {
             for (int col = 0; col < board.getSize(); col++) {
 
+                // Container for layers (Background + Emoji)
+                StackPane cellContainer = new StackPane();
+
+                // Layer 1: Background
                 Rectangle cell = new Rectangle(CELL_SIZE, CELL_SIZE);
+                cell.getStyleClass().add("grid-cell");
+                cell.setFill(getColorForState(board.getCellState(row, col), showShips));
                 cells[row][col] = cell;
 
-                cell.setFill(getColorForState(board.getCellState(row, col), showShips));
-                cell.setStroke(Color.BLACK);
+                // Layer 2: Emoji (Text)
+                Label emojiLabel = new Label();
+                emojiLabel.setAlignment(Pos.CENTER);
+                labels[row][col] = emojiLabel;
 
+                cellContainer.getChildren().addAll(cell, emojiLabel);
+
+                // Interaction events (only on enemy board)
                 if (!showShips) {
                     int r = row;
                     int c = col;
-                    cell.setOnMouseClicked(e -> handlePlayerShot(r, c));
+                    cellContainer.setOnMouseClicked(e -> handlePlayerShot(r, c));
+                    cellContainer.setCursor(javafx.scene.Cursor.HAND);
                 }
 
-                grid.add(cell, col, row);
+                grid.add(cellContainer, col, row);
             }
         }
         return grid;
     }
 
-    private Color getColorForState(CellState state, boolean showShips) {
+    /**
+     * Gets the emoji corresponding to the cell state.
+     *
+     * @param state Current state of the cell.
+     * @return String containing the emoji or empty.
+     */
+    private String getEmojiForState(CellState state) {
         switch (state) {
-            case SHIP:
-                return showShips ? Color.DARKGRAY : Color.LIGHTBLUE;
-            case WATER:
-                return Color.RED;
-            case HIT:
-                return Color.ORANGE;
-            case SUNK:
-                return Color.GREEN;
-            default:
-                return Color.LIGHTBLUE;
+            case WATER: return "❌";  // Water / Miss
+            case HIT:   return "💣";  // Hit
+            case SUNK:  return "🔥";  // Sunk
+            default:    return "";
         }
     }
 
+    /**
+     * Determines the cell background color based on its state.
+     */
+    private Color getColorForState(CellState state, boolean showShips) {
+        switch (state) {
+            case SHIP:
+                // Ships visible only to the player
+                return showShips ? Color.web("#5D4037", 0.9) : Color.TRANSPARENT;
+            case WATER:
+                // Pale blue transparent to highlight the red X
+                return Color.web("#E0F7FA", 0.6);
+            case HIT:
+                // Soft red to highlight the black bomb
+                return Color.web("#FFCDD2", 0.8);
+            case SUNK:
+                // Dark color to highlight the fire
+                return Color.web("#1A1A1A", 0.95);
+            default:
+                return Color.TRANSPARENT;
+        }
+    }
+
+    /**
+     * Visually updates both boards reflecting changes in the model.
+     * Applies shadow effects and specific colors to emojis.
+     */
+    private void refreshBoards() {
+        for (int row = 0; row < 10; row++) {
+            for (int col = 0; col < 10; col++) {
+                CellState pState = playerBoard.getCellState(row, col);
+                CellState iState = iaBoard.getCellState(row, col);
+
+                // 1. Update backgrounds
+                playerCells[row][col].setFill(getColorForState(pState, true));
+                iaCells[row][col].setFill(getColorForState(iState, false));
+
+                // 2. Update emoji text
+                playerLabels[row][col].setText(getEmojiForState(pState));
+                iaLabels[row][col].setText(getEmojiForState(iState));
+
+                // 3. Apply specific styles (Shadows and Colors)
+                applyEmojiStyle(playerLabels[row][col], pState);
+                applyEmojiStyle(iaLabels[row][col], iState);
+            }
+        }
+    }
+
+    /**
+     * Applies dynamic CSS styles to emojis to improve contrast.
+     */
+    private void applyEmojiStyle(Label label, CellState state) {
+        switch (state) {
+            case WATER: // Red X with thin black border
+                label.setStyle("-fx-font-size: 26px; -fx-text-fill: red; -fx-effect: dropshadow(one-pass-box, black, 2, 1.0, 0, 0);");
+                break;
+            case HIT: // Black Bomb with white glow
+                label.setStyle("-fx-font-size: 28px; -fx-text-fill: black; -fx-effect: dropshadow(gaussian, white, 8, 0.8, 0, 0);");
+                break;
+            case SUNK: // Intense RED Fire with black shadow
+                label.setStyle("-fx-font-size: 28px; -fx-text-fill: #ff2400; -fx-effect: dropshadow(one-pass-box, black, 3, 1.0, 0, 0);");
+                break;
+            default:
+                label.setStyle("");
+        }
+    }
+
+    /**
+     * Processes the shot fired by the player.
+     *
+     * @param row Selected row.
+     * @param col Selected column.
+     */
     private void handlePlayerShot(int row, int col) {
         if (!playerTurn || gameOver) return;
 
+        // Avoid shooting at already attacked cells
+        if (alreadyShot(iaBoard, row, col)) return;
+
         CellState result = iaBoard.processShot(row, col);
 
-// Actualizar estadísticas en gameState
+        // Update statistics
         gameState.incrementPlayerShots();
         if (result == CellState.HIT || result == CellState.SUNK) {
             gameState.incrementPlayerHits();
         }
 
         refreshBoards();
-
-// Guardar automáticamente después de cada disparo del jugador
         autoSaveGame();
 
+        // If missed, AI turn
         if (result == CellState.WATER) {
             playerTurn = false;
             gameState.switchTurn();
-            turnLabel.setText("🤖 Turno de la IA");
-            turnLabel.setStyle("-fx-text-fill: #e67e22;");
+            turnLabel.setText("⚠️ ENEMY TURN");
+            turnLabel.setStyle("-fx-font-family: 'Cinzel'; -fx-font-size: 24px; -fx-text-fill: #e67e22; -fx-effect: dropshadow(one-pass-box, black, 3, 0, 0, 1);");
             iaTurn();
         }
 
+        // Check victory condition
         if (iaBoard.allShipsSunk()) {
             gameOver = true;
             gameState.setGameOver(true);
             gameState.setWinner("PLAYER");
             gameState.setEnemyShipsSunk(iaBoard.getShips().size());
             playerData.registerWin();
-            turnLabel.setText("🏆 ¡GANASTE!");
-            turnLabel.setStyle("-fx-text-fill: #2ecc71; -fx-font-size: 24px;");
+            turnLabel.setText("🏆 VICTORY! ENEMY FLEET SUNK");
+            turnLabel.setStyle("-fx-font-family: 'Cinzel'; -fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #ffd700; -fx-effect: dropshadow(three-pass-box, black, 10, 0, 0, 0);");
             autoSaveGame();
         }
     }
 
+    /**
+     * Artificial Intelligence turn logic.
+     * Runs on a separate thread to avoid freezing the UI.
+     */
     private void iaTurn() {
         new Thread(() -> {
-            try { Thread.sleep(800); } catch (Exception ignored) {}
+            try { Thread.sleep(800); } catch (Exception ignored) {} // Simulate thinking
 
             int row, col;
 
+            // Simple hunting and shooting strategy
             if (!iaHunting) {
+                // Random shot if no previous targets
                 do {
                     row = (int)(Math.random() * 10);
                     col = (int)(Math.random() * 10);
                 } while (alreadyShot(playerBoard, row, col));
             } else {
-                int[][] directions = {
-                        {-1, 0}, {1, 0}, {0, -1}, {0, 1}
-                };
-
+                // Try shooting around the last hit
+                int[][] directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
                 boolean shotDone = false;
                 row = lastHitRow;
                 col = lastHitCol;
@@ -258,6 +401,7 @@ public class GameController {
                     }
                 }
 
+                // If no valid shots around, go back to random
                 if (!shotDone) {
                     iaHunting = false;
                     iaTurn();
@@ -265,9 +409,9 @@ public class GameController {
                 }
             }
 
+            // Execute shot
             CellState result = playerBoard.processShot(row, col);
 
-// Actualizar estadísticas de la IA
             gameState.incrementEnemyShots();
             if (result == CellState.HIT || result == CellState.SUNK) {
                 gameState.incrementEnemyHits();
@@ -276,20 +420,20 @@ public class GameController {
             int finalRow = row;
             int finalCol = col;
 
+            // Update UI on the main JavaFX thread
             Platform.runLater(() -> {
                 refreshBoards();
-
-// Guardar automáticamente después de cada disparo de la IA
                 autoSaveGame();
 
+                // Check player defeat
                 if (playerBoard.allShipsSunk()) {
                     gameOver = true;
                     gameState.setGameOver(true);
                     gameState.setWinner("ENEMY");
                     gameState.setPlayerShipsSunk(playerBoard.getShips().size());
                     playerData.registerLoss();
-                    turnLabel.setText("💀 LA IA GANÓ");
-                    turnLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-size: 24px;");
+                    turnLabel.setText("💀 DEFEAT... YOUR FLEET HAS FALLEN");
+                    turnLabel.setStyle("-fx-font-family: 'Cinzel'; -fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #c0392b; -fx-effect: dropshadow(three-pass-box, black, 10, 0, 0, 0);");
                     autoSaveGame();
                     return;
                 }
@@ -298,7 +442,7 @@ public class GameController {
                     iaHunting = true;
                     lastHitRow = finalRow;
                     lastHitCol = finalCol;
-                    iaTurn();
+                    iaTurn(); // AI shoots again if hits
                     return;
                 }
 
@@ -306,28 +450,29 @@ public class GameController {
                     iaHunting = false;
                     lastHitRow = -1;
                     lastHitCol = -1;
-                    iaTurn();
+                    iaTurn(); // AI shoots again if sinks
                     return;
                 }
 
+                // Return to player turn
                 playerTurn = true;
                 gameState.switchTurn();
-                turnLabel.setText("🎯 Tu turno");
-                turnLabel.setStyle("-fx-text-fill: #2ecc71;");
+                turnLabel.setText("🎯 YOUR TURN, CAPTAIN");
+                turnLabel.setStyle("-fx-font-family: 'Cinzel'; -fx-font-size: 24px; -fx-text-fill: #2ecc71; -fx-effect: dropshadow(one-pass-box, black, 3, 0, 0, 1);");
             });
 
         }).start();
     }
 
     /**
-     * 🔥 GUARDADO AUTOMÁTICO después de cada jugada
+     * Automatically saves the current game state.
      */
     private void autoSaveGame() {
         try {
             persistenceManager.saveGame(gameState, playerData);
-            System.out.println("✅ Partida guardada automáticamente");
+            System.out.println("✅ Game saved automatically");
         } catch (SaveGameException e) {
-            System.err.println("⚠️ Error al guardar: " + e.getMessage());
+            System.err.println("⚠️ Error saving game: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -341,22 +486,8 @@ public class GameController {
         return row >= 0 && row < 10 && col >= 0 && col < 10;
     }
 
-    private void refreshBoards() {
-        for (int row = 0; row < 10; row++) {
-            for (int col = 0; col < 10; col++) {
-                playerCells[row][col].setFill(
-                        getColorForState(playerBoard.getCellState(row, col), true)
-                );
-
-                iaCells[row][col].setFill(
-                        getColorForState(iaBoard.getCellState(row, col), false)
-                );
-            }
-        }
-    }
-
     /**
-     * Actualiza el nickname del jugador (llamado desde StartController)
+     * Sets the player's nickname in the persistence data.
      */
     public void setPlayerNickname(String nickname) {
         if (playerData != null) {
@@ -366,6 +497,6 @@ public class GameController {
 
     @FXML
     public void initialize() {
-        System.out.println("Controlador iniciado");
+        System.out.println("Game Controller initialized successfully.");
     }
 }

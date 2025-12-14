@@ -2,168 +2,196 @@ package com.battleship.view.shipDrawers;
 
 import javafx.scene.Group;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Line;
-import javafx.scene.shape.Polygon;
-import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.*;
 
+/**
+ * Draws a War Galleon (Man o' War - 3 Masts).
+ * <p>
+ * This class implements the {@link ShipDrawer} interface to render the
+ * ship corresponding to the "Aircraft Carrier" size (4 cells), but visually
+ * represented as a Galleon/Man o' War to fit the pirate theme.
+ * Features gold details and visible cannons.
+ * </p>
+ */
 public class PortaavionesDrawer implements ShipDrawer {
 
+    // "Premium" Color Palette
+    private final Color WOOD_DARK = Color.web("#281814");  // Very dark wood
+    private final Color WOOD_MID = Color.web("#4E342E");   // Medium wood
+    private final Color GOLD = Color.web("#FFD700");       // Gold details (Flagship)
+    private final Color SAIL_COLOR = Color.web("#EFEBE9"); // White sails
+    private final Color CANNON_COLOR = Color.BLACK;        // Cannons
+
+    /**
+     * Draws the ship onto the parent group based on orientation and size.
+     *
+     * @param parent       The Group container to add the shapes to.
+     * @param width        The width of the area to draw in.
+     * @param height       The height of the area to draw in.
+     * @param isHorizontal True if the ship is horizontal, false if vertical.
+     */
     @Override
     public void draw(Group parent, double width, double height, boolean isHorizontal) {
         if (isHorizontal) {
             drawHorizontal(parent, width, height);
         } else {
-            // Dibujar horizontal en un grupo interno usando el LADO LARGO como ancho
-            double longSide = height;   // en vertical el lado largo es la altura (4 celdas)
-            double shortSide = width;   // lado corto es el ancho (1 celda)
-
-            Group temp = new Group();
-            // Dibuja como horizontal: largo x corto
-            drawHorizontal(temp, longSide, shortSide);
-
-            // Pivot en el centro del área largo x corto
-            double pivotX = longSide / 2.0;
-            double pivotY = shortSide / 2.0;
-
-            // Mover el contenido para que el pivot quede en (0,0)
-            temp.setTranslateX(-pivotX);
-            temp.setTranslateY(-pivotY);
-
-            // Rotar 90° alrededor de (0,0)
-            temp.setRotate(90);
-
-            // Ahora colocamos el grupo rotado de forma que ocupe width x height:
-            // después de rotar, el tamaño visible queda shortSide x longSide,
-            // queremos que quede centrado en width x height (shortSide x longSide).
-            temp.setTranslateX(temp.getTranslateX() + width / 2.0);
-            temp.setTranslateY(temp.getTranslateY() + height / 2.0);
-
-            parent.getChildren().add(temp);
+            drawVertical(parent, width, height);
         }
     }
 
+    /**
+     * Helper method to draw the ship horizontally.
+     */
     private void drawHorizontal(Group parent, double width, double height) {
-        double svgWidth = 500.0;
-        double minY = 200.039;
-        double maxY = 299.347;
-        double svgHeight = maxY - minY;
+        // Normalize dimensions. Since it's long (4 cells), use a 400x100 base
+        double w = width / 400.0;
+        double h = height / 100.0;
 
+        // 1. THE HULL (Long and robust)
         Polygon hull = new Polygon();
         hull.getPoints().addAll(
-                48.094 / svgWidth * width, (299.347 - minY) / svgHeight * height,
-                457.576 / svgWidth * width, (298.584 - minY) / svgHeight * height,
-                502.497 / svgWidth * width, (265.052 - minY) / svgHeight * height,
-                303.605 / svgWidth * width, (264.289 - minY) / svgHeight * height,
-                281.414 / svgWidth * width, (237.616 - minY) / svgHeight * height,
-                1.242 / svgWidth * width, (237.235 - minY) / svgHeight * height
+                20.0 * w, 50.0 * h,    // Stern top (High poop deck)
+                380.0 * w, 60.0 * h,   // Bow top
+                350.0 * w, 90.0 * h,   // Bow bottom
+                40.0 * w, 90.0 * h     // Stern bottom
         );
-        hull.setFill(Color.web("#A2A2A2"));
+        hull.setFill(WOOD_DARK);
         hull.setStroke(Color.BLACK);
         hull.setStrokeWidth(1.5);
         parent.getChildren().add(hull);
 
-        Polygon tower1 = new Polygon();
-        tower1.getPoints().addAll(
-                364.565 / svgWidth * width, (264.289 - minY) / svgHeight * height,
-                385.478 / svgWidth * width, (237.235 - minY) / svgHeight * height,
-                441.512 / svgWidth * width, (237.235 - minY) / svgHeight * height,
-                440.92 / svgWidth * width, (264.289 - minY) / svgHeight * height
-        );
-        tower1.setFill(Color.web("#777777"));
-        tower1.setStroke(Color.web("#2E2D2D"));
-        tower1.setStrokeWidth(1.5);
-        parent.getChildren().add(tower1);
+        // 2. POOP DECK (The raised rear section where the captain stands)
+        Rectangle poopDeck = new Rectangle(20 * w, 40 * h, 60 * w, 10 * h);
+        poopDeck.setFill(WOOD_MID);
+        poopDeck.setStroke(Color.BLACK);
+        parent.getChildren().add(poopDeck);
 
-        Polygon frontStructure = new Polygon();
-        frontStructure.getPoints().addAll(
-                68.222 / svgWidth * width, (237.097 - minY) / svgHeight * height,
-                102.347 / svgWidth * width, (208.767 - minY) / svgHeight * height,
-                201.826 / svgWidth * width, (208.92 - minY) / svgHeight * height,
-                236.248 / svgWidth * width, (237.097 - minY) / svgHeight * height
-        );
-        frontStructure.setFill(Color.web("#777777"));
-        frontStructure.setStroke(Color.BLACK);
-        frontStructure.setStrokeWidth(1.5);
-        parent.getChildren().add(frontStructure);
+        // 3. GOLD DETAIL (Side trim)
+        Line goldTrim = new Line(25 * w, 70 * h, 340 * w, 70 * h);
+        goldTrim.setStroke(GOLD);
+        goldTrim.setStrokeWidth(3);
+        parent.getChildren().add(goldTrim);
 
-        Rectangle window1 = new Rectangle(
-                68.983 / svgWidth * width, (245.863 - minY) / svgHeight * height,
-                170.006 / svgWidth * width, 6.738 / svgHeight * height
-        );
-        window1.setFill(Color.web("#91B6BE"));
-        window1.setStroke(Color.BLACK);
-        window1.setStrokeWidth(1);
-        window1.setArcWidth(5.444 / svgWidth * width);
-        window1.setArcHeight(5.196 / svgHeight * height);
-        parent.getChildren().add(window1);
+        // 4. CANNONS (Black circles along the hull)
+        for (int i = 0; i < 5; i++) {
+            Circle cannon = new Circle((80 + (i * 60)) * w, 80 * h, 4 * h);
+            cannon.setFill(CANNON_COLOR);
+            parent.getChildren().add(cannon);
+        }
 
-        Rectangle window2 = new Rectangle(
-                68.123 / svgWidth * width, (257.426 - minY) / svgHeight * height,
-                170.748 / svgWidth * width, 6.432 / svgHeight * height
-        );
-        window2.setFill(Color.web("#91B6BE"));
-        window2.setStroke(Color.BLACK);
-        window2.setStrokeWidth(1);
-        window2.setArcWidth(5.196 / svgWidth * width);
-        window2.setArcHeight(5.196 / svgHeight * height);
-        parent.getChildren().add(window2);
+        // 5. MASTS (3 Masts: Mizzen, Main, Foremast)
+        // Rear (Mizzen)
+        Rectangle mastRear = new Rectangle(90 * w, 20 * h, 5 * w, 40 * h);
+        mastRear.setFill(WOOD_MID);
+        parent.getChildren().add(mastRear);
 
-        Rectangle window3 = new Rectangle(
-                68.44 / svgWidth * width, (268.795 - minY) / svgHeight * height,
-                170.254 / svgWidth * width, 6.432 / svgHeight * height
-        );
-        window3.setFill(Color.web("#91B6BE"));
-        window3.setStroke(Color.BLACK);
-        window3.setStrokeWidth(1);
-        window3.setArcWidth(5.196 / svgWidth * width);
-        window3.setArcHeight(5.196 / svgHeight * height);
-        parent.getChildren().add(window3);
+        // Center (Main - Largest)
+        Rectangle mastMain = new Rectangle(190 * w, 10 * h, 7 * w, 50 * h);
+        mastMain.setFill(WOOD_MID);
+        parent.getChildren().add(mastMain);
 
-        Line waterline = new Line(
-                37.886 / svgWidth * width, (285.258 - minY) / svgHeight * height,
-                475.275 / svgWidth * width, (285.258 - minY) / svgHeight * height
-        );
-        waterline.setStroke(Color.web("#DD2B2B"));
-        waterline.setStrokeWidth(3);
-        parent.getChildren().add(waterline);
+        // Front (Foremast)
+        Rectangle mastFront = new Rectangle(290 * w, 15 * h, 6 * w, 45 * h);
+        mastFront.setFill(WOOD_MID);
+        parent.getChildren().add(mastFront);
 
-        Rectangle container1 = new Rectangle(
-                307.922 / svgWidth * width, (272.432 - minY) / svgHeight * height,
-                44.234 / svgWidth * width, 7.657 / svgHeight * height
+        // 6. SAILS (Large and square)
+        // Rear Sail
+        Polygon sailRear = new Polygon(
+                70 * w, 25 * h, 110 * w, 25 * h, 105 * w, 50 * h, 75 * w, 50 * h
         );
-        container1.setFill(Color.web("#D8D8D8"));
-        container1.setStroke(Color.BLACK);
-        container1.setStrokeWidth(1);
-        parent.getChildren().add(container1);
+        sailRear.setFill(SAIL_COLOR);
+        sailRear.setStroke(Color.GRAY);
+        parent.getChildren().add(sailRear);
 
-        Rectangle container2 = new Rectangle(
-                359.425 / svgWidth * width, (272.432 - minY) / svgHeight * height,
-                44.234 / svgWidth * width, 7.657 / svgHeight * height
+        // Center Sail (Main)
+        Polygon sailMain = new Polygon(
+                160 * w, 15 * h, 220 * w, 15 * h, 215 * w, 55 * h, 165 * w, 55 * h
         );
-        container2.setFill(Color.web("#D8D8D8"));
-        container2.setStroke(Color.BLACK);
-        container2.setStrokeWidth(1);
-        parent.getChildren().add(container2);
+        sailMain.setFill(SAIL_COLOR);
+        sailMain.setStroke(Color.GRAY);
+        parent.getChildren().add(sailMain);
 
-        Rectangle container3 = new Rectangle(
-                411.082 / svgWidth * width, (272.432 - minY) / svgHeight * height,
-                44.234 / svgWidth * width, 7.657 / svgHeight * height
+        // Front Sail
+        Polygon sailFront = new Polygon(
+                260 * w, 20 * h, 320 * w, 20 * h, 315 * w, 55 * h, 265 * w, 55 * h
         );
-        container3.setFill(Color.web("#D8D8D8"));
-        container3.setStroke(Color.BLACK);
-        container3.setStrokeWidth(1);
-        parent.getChildren().add(container3);
+        sailFront.setFill(SAIL_COLOR);
+        sailFront.setStroke(Color.GRAY);
+        parent.getChildren().add(sailFront);
 
-        Polygon redBase = new Polygon();
-        redBase.getPoints().addAll(
-                37.579 / svgWidth * width, (285.258 - minY) / svgHeight * height,
-                48.109 / svgWidth * width, (299.231 - minY) / svgHeight * height,
-                457.656 / svgWidth * width, (298.466 - minY) / svgHeight * height,
-                474.968 / svgWidth * width, (285.45 - minY) / svgHeight * height
+        // 7. FLAGSHIP FLAG (On the main mast)
+        Polygon flag = new Polygon(
+                193 * w, 5 * h, 230 * w, 10 * h, 193 * w, 15 * h
         );
-        redBase.setFill(Color.web("#DD2B2B"));
-        redBase.setStroke(Color.BLACK);
-        redBase.setStrokeWidth(1.5);
-        parent.getChildren().add(redBase);
+        flag.setFill(Color.DARKRED); // Royal red flag
+        parent.getChildren().add(flag);
+    }
+
+    /**
+     * Helper method to draw the ship vertically.
+     */
+    private void drawVertical(Group parent, double width, double height) {
+        // Base 100x400
+        double w = width / 100.0;
+        double h = height / 400.0;
+
+        // 1. HULL
+        Polygon hull = new Polygon();
+        hull.getPoints().addAll(
+                50.0 * w, 20.0 * h,    // Stern
+                40.0 * w, 380.0 * h,   // Bow left
+                60.0 * w, 380.0 * h,   // Bow right
+                90.0 * w, 20.0 * h     // Stern right (wide)
+        );
+        // Centering adjustment
+        hull.getPoints().set(0, 20.0 * w); // Stern left
+        hull.getPoints().set(6, 80.0 * w); // Stern right
+
+        hull.setFill(WOOD_DARK);
+        hull.setStroke(Color.BLACK);
+        hull.setStrokeWidth(1.5);
+        parent.getChildren().add(hull);
+
+        // Poop Deck
+        Rectangle poopDeck = new Rectangle(20 * w, 20 * h, 60 * w, 20 * h);
+        poopDeck.setFill(WOOD_MID);
+        poopDeck.setStroke(Color.BLACK);
+        parent.getChildren().add(poopDeck);
+
+        // Cannons (Vertical)
+        for (int i = 0; i < 5; i++) {
+            Circle cannonRight = new Circle(75 * w, (80 + (i * 60)) * h, 4 * w);
+            cannonRight.setFill(CANNON_COLOR);
+            parent.getChildren().add(cannonRight);
+
+            Circle cannonLeft = new Circle(25 * w, (80 + (i * 60)) * h, 4 * w);
+            cannonLeft.setFill(CANNON_COLOR);
+            parent.getChildren().add(cannonLeft);
+        }
+
+        // MASTS and SAILS (Simplified vertical view)
+        // Rear
+        Rectangle mastRear = new Rectangle(10 * w, 80 * h, 80 * w, 5 * h);
+        mastRear.setFill(SAIL_COLOR); // Use sail color as if it were the yardarm
+        mastRear.setStroke(Color.GRAY);
+        parent.getChildren().add(mastRear);
+
+        // Center
+        Rectangle mastMain = new Rectangle(5 * w, 180 * h, 90 * w, 8 * h);
+        mastMain.setFill(SAIL_COLOR);
+        mastMain.setStroke(Color.GRAY);
+        parent.getChildren().add(mastMain);
+
+        // Front
+        Rectangle mastFront = new Rectangle(15 * w, 280 * h, 70 * w, 6 * h);
+        mastFront.setFill(SAIL_COLOR);
+        mastFront.setStroke(Color.GRAY);
+        parent.getChildren().add(mastFront);
+
+        // Masts (center points)
+        parent.getChildren().add(new Circle(50*w, 82*h, 4*w, WOOD_MID));
+        parent.getChildren().add(new Circle(50*w, 184*h, 6*w, WOOD_MID));
+        parent.getChildren().add(new Circle(50*w, 283*h, 5*w, WOOD_MID));
     }
 }

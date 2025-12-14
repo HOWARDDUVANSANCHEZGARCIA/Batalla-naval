@@ -4,8 +4,30 @@ import javafx.scene.Group;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 
+/**
+ * Draws a Pirate Sailing Ship (Brigantine type - 2 Masts).
+ * <p>
+ * This class implements the {@link ShipDrawer} interface to render the
+ * ship corresponding to the "Destroyer" size (2 cells), but visually
+ * represented as a Brigantine to fit the pirate theme.
+ * </p>
+ */
 public class DestructorDrawer implements ShipDrawer {
 
+    // Pirate theme colors
+    private final Color WOOD_DARK = Color.web("#3E2723");  // Dark wood (Hull)
+    private final Color WOOD_LIGHT = Color.web("#5D4037"); // Light wood (Deck/Details)
+    private final Color SAIL_COLOR = Color.web("#EFEBE9"); // Off-white (Sails)
+    private final Color FLAG_COLOR = Color.web("#212121"); // Black flag
+
+    /**
+     * Draws the ship onto the parent group based on orientation and size.
+     *
+     * @param parent       The Group container to add the shapes to.
+     * @param width        The width of the area to draw in.
+     * @param height       The height of the area to draw in.
+     * @param isHorizontal True if the ship is horizontal, false if vertical.
+     */
     @Override
     public void draw(Group parent, double width, double height, boolean isHorizontal) {
         if (isHorizontal) {
@@ -15,101 +37,126 @@ public class DestructorDrawer implements ShipDrawer {
         }
     }
 
+    /**
+     * Helper method to draw the ship horizontally.
+     */
     private void drawHorizontal(Group parent, double width, double height) {
-        double svgWidth = 200.0;
-        double svgHeight = 100.0;
+        // Use a 200x100 base for calculations (scaling ratio)
+        double w = width / 200.0;
+        double h = height / 100.0;
+
+        // 1. THE HULL (Dark wood)
         Polygon hull = new Polygon();
-        hull.getPoints().addAll(0.123/svgWidth*width,50.616/svgHeight*height,200.246/svgWidth*width,51.232/svgHeight*height,178.695/svgWidth*width,99.877/svgHeight*height,16.749/svgWidth*width,99.261/svgHeight*height,1.355/svgWidth*width,51.847/svgHeight*height);
-        hull.setFill(Color.web("#C2C1C1"));
+        hull.getPoints().addAll(
+                10.0 * w, 60.0 * h,   // Stern top
+                190.0 * w, 60.0 * h,  // Bow top (Tip)
+                170.0 * w, 90.0 * h,  // Bow bottom
+                30.0 * w, 90.0 * h    // Stern bottom
+        );
+        hull.setFill(WOOD_DARK);
         hull.setStroke(Color.BLACK);
-        hull.setStrokeWidth(1.5);
+        hull.setStrokeWidth(1);
         parent.getChildren().add(hull);
-        Polygon tower = new Polygon();
-        tower.getPoints().addAll(17.365/svgWidth*width,50.0/svgHeight*height,26.601/svgWidth*width,29.68/svgHeight*height,100.493/svgWidth*width,30.614/svgHeight*height,107.86/svgWidth*width,50.572/svgHeight*height);
-        tower.setFill(Color.web("#979797"));
-        tower.setStroke(Color.BLACK);
-        tower.setStrokeWidth(1.5);
-        parent.getChildren().add(tower);
-        Polygon chimney = new Polygon();
-        chimney.getPoints().addAll(157.627/svgWidth*width,50.969/svgHeight*height,163.567/svgWidth*width,44.139/svgHeight*height,191.183/svgWidth*width,44.139/svgHeight*height,196.528/svgWidth*width,50.672/svgHeight*height);
-        chimney.setFill(Color.web("#4A4A4A"));
-        chimney.setStroke(Color.BLACK);
-        chimney.setStrokeWidth(1.5);
-        parent.getChildren().add(chimney);
-        Line line1 = new Line(177.226/svgWidth*width,44.139/svgHeight*height,187.917/svgWidth*width,34.043/svgHeight*height);
-        line1.setStroke(Color.BLACK);
-        line1.setStrokeWidth(1);
-        parent.getChildren().add(line1);
-        Polygon mast = new Polygon();
-        mast.getPoints().addAll(50.427/svgWidth*width,29.886/svgHeight*height,56.663/svgWidth*width,0.19/svgHeight*height,66.463/svgWidth*width,0.19/svgHeight*height,69.135/svgWidth*width,29.886/svgHeight*height);
-        mast.setFill(Color.web("#979797"));
-        mast.setStroke(Color.BLACK);
-        mast.setStrokeWidth(1.5);
-        parent.getChildren().add(mast);
-        Polygon redBase = new Polygon();
-        redBase.getPoints().addAll(11.823/svgWidth*width,83.337/svgHeight*height,185.541/svgWidth*width,84.228/svgHeight*height,178.711/svgWidth*width,99.67/svgHeight*height,16.574/svgWidth*width,99.373/svgHeight*height,11.526/svgWidth*width,83.634/svgHeight*height);
-        redBase.setFill(Color.web("#E21A1A"));
-        redBase.setStroke(Color.BLACK);
-        redBase.setStrokeWidth(1.5);
-        parent.getChildren().add(redBase);
-        Rectangle window1 = new Rectangle(103.879/svgWidth*width,65.817/svgHeight*height,75.723/svgWidth*width,10.393/svgHeight*height);
-        window1.setFill(Color.web("#92A2B4"));
-        window1.setStroke(Color.BLACK);
-        window1.setStrokeWidth(1);
-        parent.getChildren().add(window1);
-        Rectangle window2 = new Rectangle(17.169/svgWidth*width,65.52/svgHeight*height,80.475/svgWidth*width,10.69/svgHeight*height);
-        window2.setFill(Color.web("#92A2B4"));
-        window2.setStroke(Color.BLACK);
-        window2.setStrokeWidth(1);
-        parent.getChildren().add(window2);
+
+        // 2. HULL DETAIL (Lighter wood stripe)
+        Line stripe = new Line(20 * w, 75 * h, 175 * w, 75 * h);
+        stripe.setStroke(WOOD_LIGHT);
+        stripe.setStrokeWidth(3);
+        parent.getChildren().add(stripe);
+
+        // 3. MASTS (Vertical poles)
+        // Rear Mast (Lower)
+        Rectangle mastRear = new Rectangle(60 * w, 20 * h, 4 * w, 40 * h);
+        mastRear.setFill(WOOD_LIGHT);
+        parent.getChildren().add(mastRear);
+
+        // Front Mast (Higher)
+        Rectangle mastFront = new Rectangle(120 * w, 10 * h, 5 * w, 50 * h);
+        mastFront.setFill(WOOD_LIGHT);
+        parent.getChildren().add(mastFront);
+
+        // 4. SAILS (Old-style square sails)
+        // Rear Sail
+        Polygon sailRear = new Polygon(
+                64 * w, 25 * h,
+                100 * w, 25 * h,
+                95 * w, 50 * h,
+                64 * w, 50 * h
+        );
+        sailRear.setFill(SAIL_COLOR);
+        sailRear.setStroke(Color.GRAY);
+        sailRear.setStrokeWidth(0.5);
+        parent.getChildren().add(sailRear);
+
+        // Front Sail
+        Polygon sailFront = new Polygon(
+                125 * w, 15 * h,
+                170 * w, 15 * h,
+                165 * w, 45 * h,
+                125 * w, 45 * h
+        );
+        sailFront.setFill(SAIL_COLOR);
+        sailFront.setStroke(Color.GRAY);
+        sailFront.setStrokeWidth(0.5);
+        parent.getChildren().add(sailFront);
+
+        // 5. PIRATE FLAG (On the front mast)
+        Polygon flag = new Polygon(
+                122 * w, 10 * h,
+                100 * w, 15 * h,
+                122 * w, 20 * h
+        );
+        flag.setFill(FLAG_COLOR);
+        parent.getChildren().add(flag);
     }
 
+    /**
+     * Helper method to draw the ship vertically.
+     */
     private void drawVertical(Group parent, double width, double height) {
-        double svgWidth = 100.0;
-        double svgHeight = 200.0;
+        // Invert dimensions for vertical drawing
+        // Reference base 100x200
+        double w = width / 100.0;
+        double h = height / 200.0;
+
+        // 1. THE HULL
         Polygon hull = new Polygon();
-        hull.getPoints().addAll(50.616/svgWidth*width,0.123/svgHeight*height,51.232/svgWidth*width,200.246/svgHeight*height,99.877/svgWidth*width,178.695/svgHeight*height,99.261/svgWidth*width,16.749/svgHeight*height,51.847/svgWidth*width,1.355/svgHeight*height);
-        hull.setFill(Color.web("#C2C1C1"));
+        hull.getPoints().addAll(
+                40.0 * w, 10.0 * h,   // Stern left
+                40.0 * w, 190.0 * h,  // Bow (Tip)
+                70.0 * w, 170.0 * h,  // Bow right
+                70.0 * w, 30.0 * h    // Stern right
+        );
+        // Adjustment to visually center it better vertically
+        hull.setTranslateX(-5 * w);
+
+        hull.setFill(WOOD_DARK);
         hull.setStroke(Color.BLACK);
-        hull.setStrokeWidth(1.5);
+        hull.setStrokeWidth(1);
         parent.getChildren().add(hull);
-        Polygon tower = new Polygon();
-        tower.getPoints().addAll(50.0/svgWidth*width,17.365/svgHeight*height,29.68/svgWidth*width,26.601/svgHeight*height,30.614/svgWidth*width,100.493/svgHeight*height,50.572/svgWidth*width,107.86/svgHeight*height);
-        tower.setFill(Color.web("#979797"));
-        tower.setStroke(Color.BLACK);
-        tower.setStrokeWidth(1.5);
-        parent.getChildren().add(tower);
-        Polygon chimney = new Polygon();
-        chimney.getPoints().addAll(50.969/svgWidth*width,157.627/svgHeight*height,44.139/svgWidth*width,163.567/svgHeight*height,44.139/svgWidth*width,191.183/svgHeight*height,50.672/svgWidth*width,196.528/svgHeight*height);
-        chimney.setFill(Color.web("#4A4A4A"));
-        chimney.setStroke(Color.BLACK);
-        chimney.setStrokeWidth(1.5);
-        parent.getChildren().add(chimney);
-        Line line1 = new Line(44.139/svgWidth*width,177.226/svgHeight*height,34.043/svgWidth*width,187.917/svgHeight*height);
-        line1.setStroke(Color.BLACK);
-        line1.setStrokeWidth(1);
-        parent.getChildren().add(line1);
-        Polygon mast = new Polygon();
-        mast.getPoints().addAll(29.886/svgWidth*width,50.427/svgHeight*height,0.19/svgWidth*width,56.663/svgHeight*height,0.19/svgWidth*width,66.463/svgHeight*height,29.886/svgWidth*width,69.135/svgHeight*height);
-        mast.setFill(Color.web("#979797"));
-        mast.setStroke(Color.BLACK);
-        mast.setStrokeWidth(1.5);
-        parent.getChildren().add(mast);
-        Polygon redBase = new Polygon();
-        redBase.getPoints().addAll(83.337/svgWidth*width,11.823/svgHeight*height,84.228/svgWidth*width,185.541/svgHeight*height,99.67/svgWidth*width,178.711/svgHeight*height,99.373/svgWidth*width,16.574/svgHeight*height,83.634/svgWidth*width,11.526/svgHeight*height);
-        redBase.setFill(Color.web("#E21A1A"));
-        redBase.setStroke(Color.BLACK);
-        redBase.setStrokeWidth(1.5);
-        parent.getChildren().add(redBase);
-        Rectangle window1 = new Rectangle(65.817/svgWidth*width,103.879/svgHeight*height,10.393/svgWidth*width,75.723/svgHeight*height);
-        window1.setFill(Color.web("#92A2B4"));
-        window1.setStroke(Color.BLACK);
-        window1.setStrokeWidth(1);
-        parent.getChildren().add(window1);
-        Rectangle window2 = new Rectangle(65.52/svgWidth*width,17.169/svgHeight*height,10.69/svgWidth*width,80.475/svgHeight*height);
-        window2.setFill(Color.web("#92A2B4"));
-        window2.setStroke(Color.BLACK);
-        window2.setStrokeWidth(1);
-        parent.getChildren().add(window2);
+
+        // 2. MASTS
+        // Rear
+        Rectangle mastRear = new Rectangle(30 * w, 60 * h, 40 * w, 4 * h);
+        mastRear.setFill(WOOD_LIGHT);
+        parent.getChildren().add(mastRear);
+
+        // Front
+        Rectangle mastFront = new Rectangle(20 * w, 120 * h, 50 * w, 5 * h);
+        mastFront.setFill(WOOD_LIGHT);
+        parent.getChildren().add(mastFront);
+
+        // 3. SAILS (Seen from above they look like inflated rectangles/ellipses)
+        // Rear Sail
+        Ellipse sailRear = new Ellipse(50 * w, 75 * h, 15 * w, 10 * h);
+        sailRear.setFill(SAIL_COLOR);
+        sailRear.setStroke(Color.GRAY);
+        parent.getChildren().add(sailRear);
+
+        // Front Sail
+        Ellipse sailFront = new Ellipse(50 * w, 135 * h, 20 * w, 12 * h);
+        sailFront.setFill(SAIL_COLOR);
+        sailFront.setStroke(Color.GRAY);
+        parent.getChildren().add(sailFront);
     }
 }

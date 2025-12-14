@@ -16,7 +16,11 @@ import com.battleship.exceptions.LoadGameException;
 import com.battleship.exceptions.InvalidGameStateException;
 
 /**
- * Controlador de la pantalla de inicio con animaciones y lógica de entrada.
+ * Controller for the start screen handling animations and input logic.
+ * <p>
+ * This class manages the main menu interactions, including nickname validation,
+ * starting a new game, and loading a previously saved game.
+ * </p>
  */
 public class StartController {
 
@@ -26,6 +30,14 @@ public class StartController {
     @FXML
     private VBox mainContainer;
 
+    /**
+     * Initializes the controller class.
+     * <p>
+     * Sets up the initial focus on the nickname field, adds key listeners to handle
+     * the "Enter" key for starting the game, and adds a listener to clear error styles
+     * when the user types. Finally, it triggers the entrance animation.
+     * </p>
+     */
     @FXML
     public void initialize() {
         Platform.runLater(() -> nicknameField.requestFocus());
@@ -43,6 +55,9 @@ public class StartController {
         animateEntrance();
     }
 
+    /**
+     * Plays a fade-in animation for the main container.
+     */
     private void animateEntrance() {
         mainContainer.setOpacity(0);
         FadeTransition fadeOut = new FadeTransition(Duration.seconds(1.5), mainContainer);
@@ -51,6 +66,13 @@ public class StartController {
         fadeOut.play();
     }
 
+    /**
+     * Handles the "New Game" button action.
+     * <p>
+     * Validates that the nickname field is not empty. If valid, transitions to the
+     * Ship Placement controller. If invalid, displays an error alert.
+     * </p>
+     */
     @FXML
     protected void onNewGame() {
         String nickname = nicknameField.getText().trim();
@@ -66,6 +88,14 @@ public class StartController {
         }
     }
 
+    /**
+     * Handles the "Load Game" button action.
+     * <p>
+     * Checks if a nickname is provided and if a saved game exists. If successful,
+     * restores the game state and transitions to the Game Controller.
+     * Handles {@link LoadGameException} and {@link InvalidGameStateException} if the save file is corrupt.
+     * </p>
+     */
     @FXML
     protected void onLoadGame() {
         String nickname = nicknameField.getText().trim();
@@ -144,6 +174,13 @@ public class StartController {
         }
     }
 
+    /**
+     * Displays a WARNING alert with custom styling.
+     *
+     * @param title   The title of the alert window.
+     * @param header  The header text of the alert.
+     * @param content The main content text of the alert.
+     */
     private void showAlert(String title, String header, String content) {
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle(title);
@@ -164,6 +201,13 @@ public class StartController {
         alert.showAndWait();
     }
 
+    /**
+     * Displays an INFORMATION alert with custom styling.
+     *
+     * @param title   The title of the alert window.
+     * @param header  The header text of the alert.
+     * @param content The main content text of the alert.
+     */
     private void showInfoAlert(String title, String header, String content) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);

@@ -12,72 +12,95 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 /**
- * Controlador de la vista de colocación de barcos
+ * Controller for the Ship Placement Phase (Setup).
+ * <p>
+ * Handles the drag-and-drop interface where the player positions their fleet
+ * before the battle begins. Includes logic for rotation (right-click) and
+ * validation of ship placement.
+ * </p>
+ *
+ * @version 1.0.0
+ * @author Martin
  */
 public class ShipPlacementController {
 
+    // --- UI Components ---
     private Pane boardPane;
     private VBox shipsPanel;
-    private DraggableMakerGrid draggableMaker;
     private Label instructionLabel;
+
+    // --- Logic & Model ---
+    private DraggableMakerGrid draggableMaker;
     private Board board;
 
+    // --- Constants ---
     private static final double BOARD_SIZE_PX = 500;
     private static final double SHIP_INITIAL_X = 550;
 
+    /**
+     * Initializes and displays the ship placement screen.
+     *
+     * @param stage The primary stage of the application.
+     */
     public void show(Stage stage) {
-        // Crear panel principal
+        // Main layout with the pirate theme background
         BorderPane root = new BorderPane();
         root.setPadding(new Insets(30));
-        root.setStyle("-fx-background-color: #2c3e50;");
+        root.getStyleClass().add("ship-placement-background");
 
-        // Panel superior con título e instrucciones
+        // Top Panel: Title and Instructions
         VBox topPanel = createTopPanel();
         root.setTop(topPanel);
 
-        // Panel central con el tablero
+        // Center Panel: The Grid/Board
         boardPane = new Pane();
         boardPane.setPrefSize(BOARD_SIZE_PX, BOARD_SIZE_PX);
         boardPane.setMaxSize(BOARD_SIZE_PX, BOARD_SIZE_PX);
         boardPane.setMinSize(BOARD_SIZE_PX, BOARD_SIZE_PX);
-        boardPane.setStyle("-fx-background-color: white; -fx-border-color: #34495e; -fx-border-width: 4;");
+        boardPane.getStyleClass().add("game-grid"); // Applies the wood/parchment style
 
-        // Dibujar el grid
+        // Draw the visual grid lines
         GridHandler gridHandler = new GridHandler(boardPane);
 
-        // Centrar el tablero
+        // Container to center the board
         HBox centerContainer = new HBox(boardPane);
         centerContainer.setAlignment(Pos.CENTER);
         centerContainer.setPadding(new Insets(30));
         root.setCenter(centerContainer);
 
-        // Panel derecho con los barcos
+        // Right Panel: Available Fleet
         shipsPanel = createShipsPanel();
         root.setRight(shipsPanel);
 
-        // Panel inferior con botones
+        // Bottom Panel: Control Buttons
         VBox bottomPanel = createBottomPanel();
         root.setBottom(bottomPanel);
 
-        // Inicializar board
+        // Initialize Logic Board
         board = new Board();
         draggableMaker = new DraggableMakerGrid(board);
 
-        // Crear los barcos arrastrables
+        // Spawn draggable ships
         createDraggableShips();
 
-        // Obtener dimensiones de la pantalla
+        // Get screen dimensions
         Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
 
-        // Configurar la escena
+        // Scene setup
         Scene scene = new Scene(root, screenBounds.getWidth(), screenBounds.getHeight());
 
-        stage.setTitle("Batalla Naval - Colocación de Barcos");
+        // Load CSS Styles safely
+        try {
+            scene.getStylesheets().add(getClass().getResource("/com/battleship/view/styles.css").toExternalForm());
+        } catch (Exception e) {
+            System.err.println("Error: Could not load CSS style file.");
+        }
+
+        stage.setTitle("Battleship - Deployment Phase");
         stage.setScene(scene);
         stage.setMaximized(true);
         stage.setResizable(true);
@@ -86,53 +109,65 @@ public class ShipPlacementController {
         stage.show();
     }
 
+    /**
+     * Creates the top section with the game title and user instructions.
+     */
     private VBox createTopPanel() {
         VBox panel = new VBox(15);
         panel.setAlignment(Pos.CENTER);
         panel.setPadding(new Insets(0, 0, 20, 0));
 
-        Label title = new Label("🚢 BATALLA NAVAL 🚢");
-        title.setStyle("-fx-font-size: 36px; -fx-font-weight: bold; -fx-text-fill: #ecf0f1;");
+        Label title = new Label("BATALLA NAVAL ");
+        title.getStyleClass().add("title-label");
 
         instructionLabel = new Label("Arrastra los barcos al tablero | Click derecho para rotar");
-        instructionLabel.setStyle("-fx-font-size: 18px; -fx-text-fill: #bdc3c7;");
+        instructionLabel.getStyleClass().add("subtitle-epic");
 
         panel.getChildren().addAll(title, instructionLabel);
         return panel;
     }
 
+    /**
+     * Creates the right sidebar displaying the fleet inventory.
+     */
     private VBox createShipsPanel() {
         VBox panel = new VBox(25);
         panel.setPadding(new Insets(30));
         panel.setAlignment(Pos.TOP_CENTER);
-        panel.setStyle("-fx-background-color: #34495e; -fx-background-radius: 10;");
         panel.setPrefWidth(320);
+        panel.getStyleClass().add("sidebar-panel");
 
         Label title = new Label("FLOTA DISPONIBLE");
-        title.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #ecf0f1;");
+        title.getStyleClass().add("sidebar-title");
 
         VBox info = new VBox(12);
         info.getChildren().addAll(
-                createShipInfoLabel("1x Portaaviones (4 casillas)", Color.DARKBLUE),
-                createShipInfoLabel("2x Submarinos (3 casillas)", Color.GREEN),
-                createShipInfoLabel("3x Destructores (2 casillas)", Color.ORANGE),
-                createShipInfoLabel("4x Fragatas (1 casilla)", Color.GRAY)
+                createShipInfoLabel("1x Galeón (4 casillas)"),
+                createShipInfoLabel("2x Carabelas (3 casillas)"),
+                createShipInfoLabel("3x Bergantines (2 casillas)"),
+                createShipInfoLabel("4x Balandros (1 casilla)")
         );
 
         Label note = new Label("💡 Los barcos del mismo tipo\nestán apilados");
-        note.setStyle("-fx-font-size: 14px; -fx-text-fill: #95a5a6; -fx-text-alignment: center;");
         note.setWrapText(true);
+        note.getStyleClass().add("instruction-text");
 
         panel.getChildren().addAll(title, info, note);
         return panel;
     }
 
-    private Label createShipInfoLabel(String text, Color color) {
+    /**
+     * Helper to create a formatted label for the ship list.
+     */
+    private Label createShipInfoLabel(String text) {
         Label label = new Label("• " + text);
-        label.setStyle("-fx-font-size: 16px; -fx-text-fill: #ecf0f1;");
+        label.getStyleClass().add("sidebar-text");
         return label;
     }
 
+    /**
+     * Creates the bottom section with Reset and Start buttons.
+     */
     private VBox createBottomPanel() {
         VBox panel = new VBox(15);
         panel.setAlignment(Pos.CENTER);
@@ -141,12 +176,12 @@ public class ShipPlacementController {
         HBox buttonBox = new HBox(25);
         buttonBox.setAlignment(Pos.CENTER);
 
-        Button resetButton = new Button("🔄 Reiniciar");
-        resetButton.setStyle("-fx-font-size: 18px; -fx-padding: 15 30; -fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5;");
+        Button resetButton = new Button("REINICIAR FLOTA");
+        resetButton.getStyleClass().add("button");
         resetButton.setOnAction(e -> resetBoard());
 
-        Button startButton = new Button("▶ Iniciar Juego");
-        startButton.setStyle("-fx-font-size: 18px; -fx-padding: 15 30; -fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5;");
+        Button startButton = new Button(" ZARPAR A BATALLA ");
+        startButton.getStyleClass().add("button");
         startButton.setOnAction(e -> startGame());
 
         buttonBox.getChildren().addAll(resetButton, startButton);
@@ -155,11 +190,15 @@ public class ShipPlacementController {
         return panel;
     }
 
+    /**
+     * Instantiates the ship objects and places them in the initial sidebar area.
+     */
     private void createDraggableShips() {
         double startX = SHIP_INITIAL_X;
         double startY = 100;
         double spacing = 90;
 
+        // Create ships according to game rules
         createDraggableShip(ShipType.PORTAAVIONES, true, startX, startY);
         startY += spacing;
 
@@ -178,6 +217,9 @@ public class ShipPlacementController {
         }
     }
 
+    /**
+     * Creates a single draggable ship and defines its rotation logic (Right-Click).
+     */
     private void createDraggableShip(ShipType type, boolean horizontal, double x, double y) {
         Ship ship = new Ship(type, horizontal);
         ShipView shipView = new ShipView(ship);
@@ -185,51 +227,53 @@ public class ShipPlacementController {
         shipView.setLayoutX(x);
         shipView.setLayoutY(y);
 
+        // Attach drag-and-drop logic
         draggableMaker.makeDraggable(shipView);
 
+        // Right-click to rotate logic
         shipView.setOnMouseClicked(event -> {
             if (event.getButton() == javafx.scene.input.MouseButton.SECONDARY) {
                 Ship rotatingShip = shipView.getShip();
 
-                // Coordenadas actuales en píxeles
+                // Current pixel coordinates
                 double currentX = shipView.getLayoutX();
                 double currentY = shipView.getLayoutY();
 
-                // Si está fuera del tablero (en el panel derecho), solo rota la vista y el flag
+                // If outside the board (sidebar), just rotate visually
                 if (currentX >= BOARD_SIZE_PX || currentY >= BOARD_SIZE_PX) {
                     rotatingShip.setHorizontal(!rotatingShip.isHorizontal());
                     shipView.updateOrientation();
                     return;
                 }
 
-                // Está en el tablero → hay que sincronizar con Board
-                int gridCol = (int) (currentX / 50); // mejor usar GridConfig.CELL_SIZE
+                // If inside board, we need to validate against the grid
+                int gridCol = (int) (currentX / 50);
                 int gridRow = (int) (currentY / 50);
 
                 boolean wasPlaced = rotatingShip.getPositions() != null && !rotatingShip.getPositions().isEmpty();
 
-                // 1) Si estaba colocado, quitarlo del Board
+                // 1) Remove from logic board temporarily
                 if (wasPlaced) {
                     board.removeShip(rotatingShip);
                 }
 
-                // 2) Guardar orientación anterior y cambiar a la nueva
+                // 2) Rotate logic and view
                 boolean oldHorizontal = rotatingShip.isHorizontal();
                 rotatingShip.setHorizontal(!oldHorizontal);
                 shipView.updateOrientation();
 
-                // 3) Comprobar si con la nueva orientación cabe y no se solapa
+                // 3) Check if new position is valid
                 boolean canStay = board.canPlaceShip(rotatingShip, gridRow, gridCol);
 
                 if (canStay) {
-                    // 4) Recolocarlo en el Board con la nueva orientación
+                    // 4) Place in new orientation
                     board.placeShip(rotatingShip, gridRow, gridCol);
                 } else {
-                    // 5) No cabe / hay superposición → revertir orientación
+                    // 5) Invalid? Revert rotation
                     rotatingShip.setHorizontal(oldHorizontal);
                     shipView.updateOrientation();
 
-                    // Volver a colocarlo en el Board como estaba antes
+                    // Put it back where it was
                     if (wasPlaced) {
                         board.placeShip(rotatingShip, gridRow, gridCol);
                     }
@@ -240,6 +284,9 @@ public class ShipPlacementController {
         boardPane.getChildren().add(shipView);
     }
 
+    /**
+     * Resets the board, removing all ships and creating new ones.
+     */
     private void resetBoard() {
         boardPane.getChildren().removeIf(node -> node instanceof ShipView);
         board = new Board();
@@ -247,32 +294,36 @@ public class ShipPlacementController {
         createDraggableShips();
 
         instructionLabel.setText("Tablero reiniciado | Arrastra los barcos al tablero");
-        instructionLabel.setStyle("-fx-font-size: 18px; -fx-text-fill: #bdc3c7;");
+        // Maintain Cinzel font consistency
+        instructionLabel.setStyle("-fx-font-family: 'Cinzel'; -fx-font-size: 18px; -fx-text-fill: #bdc3c7; -fx-effect: dropshadow(one-pass-box, black, 2, 0, 0, 1);");
     }
 
+    /**
+     * Validates ship placement and transitions to the main Game Controller.
+     */
     private void startGame() {
-        // Validar que todos los barcos estén colocados
-        if (board.getShips().size() < 10) { // 10 barcos en total
+        // Validate that all ships (10 total) are placed
+        if (board.getShips().size() < 10) {
             instructionLabel.setText("⚠️ Debes colocar todos los barcos antes de iniciar");
-            instructionLabel.setStyle("-fx-font-size: 18px; -fx-text-fill: #e74c3c; -fx-font-weight: bold;");
+            instructionLabel.setStyle("-fx-font-family: 'Cinzel'; -fx-font-size: 18px; -fx-text-fill: #e74c3c; -fx-font-weight: bold; -fx-effect: dropshadow(one-pass-box, black, 2, 0, 0, 1);");
             return;
         }
 
         instructionLabel.setText("⚓ Iniciando batalla...");
-        instructionLabel.setStyle("-fx-font-size: 18px; -fx-text-fill: #2ecc71; -fx-font-weight: bold;");
+        instructionLabel.setStyle("-fx-font-family: 'Cinzel'; -fx-font-size: 18px; -fx-text-fill: #2ecc71; -fx-font-weight: bold; -fx-effect: dropshadow(one-pass-box, black, 2, 0, 0, 1);");
 
-        // Crear tablero de la IA con barcos aleatorios
+        // Create AI board and place ships randomly
         Board iaBoard = new Board();
         placeIAShips(iaBoard);
 
-        // Iniciar el juego
+        // Transition to Game Screen
         Stage stage = (Stage) boardPane.getScene().getWindow();
         GameController gameController = new GameController();
         gameController.startGame(board, iaBoard);
     }
 
     /**
-     * Coloca los barcos de la IA de forma aleatoria
+     * Randomly places the enemy fleet on the AI board.
      */
     private void placeIAShips(Board iaBoard) {
         ShipType[] shipTypes = {
@@ -286,6 +337,7 @@ public class ShipPlacementController {
             boolean placed = false;
             int attempts = 0;
 
+            // Try to place each ship up to 100 times to avoid infinite loops
             while (!placed && attempts < 100) {
                 int row = (int) (Math.random() * 10);
                 int col = (int) (Math.random() * 10);
