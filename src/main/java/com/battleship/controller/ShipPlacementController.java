@@ -120,7 +120,7 @@ public class ShipPlacementController {
         Label title = new Label("BATALLA NAVAL ");
         title.getStyleClass().add("title-label");
 
-        instructionLabel = new Label("Arrastra los barcos al tablero | Click derecho para rotar");
+        instructionLabel = new Label("Arrastra los barcos al tablero");
         instructionLabel.getStyleClass().add("subtitle-epic");
 
         panel.getChildren().addAll(title, instructionLabel);
@@ -152,7 +152,11 @@ public class ShipPlacementController {
         note.setWrapText(true);
         note.getStyleClass().add("instruction-text");
 
-        panel.getChildren().addAll(title, info, note);
+        Label help = new Label("💡 Los barcos del mismo tipo\nestán apilados");
+        help.setWrapText(true);
+        help.getStyleClass().add("instruction-text");
+
+        panel.getChildren().addAll(title, info, note, help);
         return panel;
     }
 
