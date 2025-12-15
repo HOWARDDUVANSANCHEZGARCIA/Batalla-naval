@@ -1,6 +1,6 @@
 # Batalla Naval
 
-![Lenguaje: Java](https://img.shields.io/badge/language-Java-blue) ![Estado: En desarrollo](https://img.shields.io/badge/status-en--desarrollo-yellow)
+![Lenguaje: Java](https://img.shields.io/badge/language-Java-blue) ![Estado: Completado](https://img.shields.io/badge/status-en--desarrollo-yellow)
 
 Descripción
 -----------
@@ -113,15 +113,6 @@ Con Gradle:
 ```
 Incluye pruebas para la colocación de barcos, detección de impactos y lógica de fin de juego. Si no hay pruebas, se recomienda agregar JUnit y pruebas para las clases centrales.
 
-Contribuir
-----------
-¡Gracias por querer contribuir! Sigue estos pasos:
-1. Haz fork del repositorio.
-2. Crea una rama con un nombre descriptivo: `feature/nueva-funcionalidad` o `fix/bug-descripcion`.
-3. Escribe tests para tus cambios cuando sea aplicable.
-4. Abre un Pull Request describiendo los cambios y por qué son necesarios.
-5. Respeta el estilo de código del proyecto y mantén commits claros.
-
 Reportar errores y solicitudes
 ------------------------------
 Usa la sección de "Issues" en GitHub para:
@@ -132,15 +123,6 @@ Usa la sección de "Issues" en GitHub para:
 Licencia
 --------
 Este proyecto no tiene una licencia establecida en el repositorio (o reemplaza según corresponda). Se sugiere usar una licencia estándar, por ejemplo MIT:
-
-MIT License
-```
-© [AÑO] [TU NOMBRE]
-
-Se concede permiso, libre de cargos, a cualquier persona que obtenga una copia...
-```
-
-(Reemplaza por el texto completo de la licencia y los datos correspondientes.)
 
 Autores / Contacto
 ------------------
