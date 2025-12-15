@@ -1,6 +1,6 @@
 # Batalla Naval
 
-![Lenguaje: Java](https://img.shields.io/badge/language-Java-blue) ![Estado: Completado](https://img.shields.io/badge/status-Completado-yellow)
+![Lenguaje: Java](https://img.shields.io/badge/language-Java-blue) ![Estado: Completado](https://img.shields.io/badge/status-Completado-green)
 
 Descripción
 -----------
